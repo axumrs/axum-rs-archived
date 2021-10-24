@@ -1,0 +1,29 @@
+[package]
+name = "axum-rs"
+version = "0.1.0"
+edition = "2018"
+authors = ["axum.rs <team@axum.rs>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/axumrs/axum-rs"
+homepage = "https://axum.rs"
+description = "axum.rs网站系统"
+
+
+[dependencies]
+tokio = { version="1", features = ["full"] }
+serde = { version="1", features = ["derive"] }
+serde_json = "1"
+axum = "0.2"
+config = "0.11"
+dotenv = "0.15"
+tokio-postgres = "0.7"
+tokio-pg-mapper = "0.2"
+tokio-pg-mapper-derive = "0.2"
+deadpool-postgres = "0.9"
+tracing = "0.1"
+tracing-subscriber = "0.2"
+pulldown-cmark = "0.8"
+askama = "0.10"
+tower-http = { version = "0.1", features = ["fs", "trace"] }
+
