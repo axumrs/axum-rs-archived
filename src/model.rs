@@ -1,5 +1,9 @@
 use tokio_pg_mapper_derive::PostgresMapper;
 
+pub struct AppState {
+    pub pool: deadpool_postgres::Pool,
+}
+
 #[derive(PostgresMapper)]
 #[pg_mapper(table = "subject")]
 pub struct Subject {
@@ -19,6 +23,7 @@ pub struct Topic {
     pub id: i64,
     pub title: String,
     pub subject_id: i32,
+    pub self_slug: String,
     pub slug: String,
     pub summary: String,
     pub src: String,
@@ -48,7 +53,7 @@ pub struct TagID {
 }
 
 pub struct TopicTag {
-    pub id: i64,
     pub topic_id: i64,
     pub tag_id: i32,
+    pub is_del: bool,
 }

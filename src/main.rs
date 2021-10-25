@@ -1,15 +1,13 @@
-use std::convert::Infallible;
+use std::{convert::Infallible, sync::Arc};
 
-use axum::{
-    handler::{get, Handler},
-    http::StatusCode,
-    service, Router,
-};
+use axum::{handler::get, http::StatusCode, service, AddExtensionLayer, Router};
 use axum_rs::{
     config,
     handler::{backend, frontend},
+    model::AppState,
 };
 use dotenv::dotenv;
+use tower_cookies::CookieManagerLayer;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 
 #[tokio::main]
@@ -21,10 +19,19 @@ async fn main() {
 
     dotenv().ok();
     let cfg = config::Config::from_env().unwrap();
+    let pool = cfg.pg.create_pool(tokio_postgres::NoTls).unwrap();
     tracing::info!("Web服务监听于{}", &cfg.web.addr);
 
-    let backend_router = Router::new().route("/subject", get(backend::subject::index));
-    let static_serve = service::get(ServeDir::new("axum-rs/static")).handle_error(|err| {
+    let state = Arc::new(AppState { pool });
+
+    let backend_router = Router::new()
+        .route("/subject", get(backend::subject::index))
+        .route(
+            "/subject/add",
+            get(backend::subject::add).post(backend::subject::add_action),
+        )
+        .layer(CookieManagerLayer::new());
+    let static_serve = service::get(ServeDir::new("static")).handle_error(|err| {
         Ok::<_, Infallible>((
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("载入静态资源出错：{}", err),
@@ -35,7 +42,8 @@ async fn main() {
         .route("/", get(frontend::index::index))
         .nest("/static", static_serve)
         .nest("/admin", backend_router)
-        .layer(TraceLayer::new_for_http());
+        .layer(TraceLayer::new_for_http())
+        .layer(AddExtensionLayer::new(state));
     axum::Server::bind(&cfg.web.addr.parse().unwrap())
         .serve(app.into_make_service())
         .await

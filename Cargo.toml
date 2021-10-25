@@ -26,4 +26,5 @@ tracing-subscriber = "0.2"
 pulldown-cmark = "0.8"
 askama = "0.10"
 tower-http = { version = "0.1", features = ["fs", "trace"] }
+tower-cookies = "0.2"
 

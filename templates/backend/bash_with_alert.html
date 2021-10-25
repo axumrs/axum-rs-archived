@@ -1,0 +1,12 @@
+{% extends "base.html" %} {% block alert %} {% match msg %} {% when Some with
+(msg_str)%}
+<!-- 成功 -->
+<div class="alert alert-success alert-dismissible">
+  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">
+    ×
+  </button>
+  <h5><i class="icon fas fa-check"></i> 提示信息</h5>
+  {{ msg_str }}
+</div>
+<!--/成功-->
+{% when None %} {% endmatch %} {% endblock %}

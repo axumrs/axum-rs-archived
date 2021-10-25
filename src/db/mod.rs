@@ -99,7 +99,7 @@ async fn execute(client: &Client, sql: &str, args: &[&(dyn ToSql + Sync)]) -> Re
 /// * `client` - 数据库连接对象
 /// * `sql` - SQL语句
 /// * `args` - 查询参数
-async fn count(client: &Client, sql: &str, args: &[&(dyn ToSql + Sync)]) -> Result<u32> {
+async fn count(client: &Client, sql: &str, args: &[&(dyn ToSql + Sync)]) -> Result<i64> {
     let stmt = get_stmt(client, sql).await?;
     let result = client
         .query_one(&stmt, args)

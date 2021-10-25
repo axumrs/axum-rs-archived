@@ -48,7 +48,7 @@ pub async fn count(
     client: &Client,
     condition: Option<&str>,
     args: &[&(dyn ToSql + Sync)],
-) -> Result<u32> {
+) -> Result<i64> {
     let sql = SelectStmt::builder()
         .table("tag")
         .fields("COUNT(*)")

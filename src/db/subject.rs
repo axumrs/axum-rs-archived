@@ -25,7 +25,7 @@ async fn count(
     client: &Client,
     condition: Option<&str>,
     args: &[&(dyn ToSql + Sync)],
-) -> Result<u32> {
+) -> Result<i64> {
     let sql_count = SelectStmt::builder()
         .table(TABLE_NAME)
         .fields("COUNT(*)")
@@ -127,7 +127,7 @@ pub async fn slug_is_exists(client: &Client, slug: &str) -> Result<bool> {
 ///
 /// * `client` - 数据库连接对象
 /// * `cs` - 输入的主题信息
-pub async fn create_subject(client: &Client, cs: &CreateSubject) -> Result<SubjectID> {
+pub async fn create(client: &Client, cs: &CreateSubject) -> Result<SubjectID> {
     if slug_is_exists(client, &cs.slug).await? {
         return Err(AppError::is_exists(&format!(
             "主题的固定链接 '{}' 已存在",
