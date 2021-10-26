@@ -3,5 +3,26 @@
 {% block parent_url %}subject{% endblock %}
 {% block title %}专题列表{% endblock %}
 {% block content %}
-这里放置专题列表
+<table class="table">
+    <thead>
+        <tr>
+            <th>名称</th>
+            <th>固定链接</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    {% for row in subject_list.data %}
+    <tr>
+        <td> {{ row.name }}</td>
+        <td> {{ row.slug }}</td>
+        <td>
+            <a href="/admin/subject/edit/{{row.id}}" class="btn btn-primary btn-xs"><i class="fa fa-pen"></i> 修改</a>
+            <a href="/admin/subject/del/{{row.id}}" class="btn btn-danger btn-xs" onclick="if(!confirm('确定删除')) return false"><i class="fa fa-trash"></i> 删除</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
+{% block pagination %}
+{% include "../pagination.html" %}
 {% endblock %}

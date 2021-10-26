@@ -99,6 +99,11 @@ impl From<tokio_postgres::Error> for AppError {
         Self::db_error(err)
     }
 }
+impl From<askama::Error> for AppError {
+    fn from(err: askama::Error) -> Self {
+        Self::tmpl_error(err)
+    }
+}
 
 impl IntoResponse for AppError {
     type Body = Full<Bytes>;

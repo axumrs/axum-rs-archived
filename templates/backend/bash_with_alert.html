@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block alert %} {% match msg %} {% when Some with
+{% extends "base.html" %} {% block alert %} {% match arg.msg %} {% when Some with
 (msg_str)%}
 <!-- 成功 -->
 <div class="alert alert-success alert-dismissible">

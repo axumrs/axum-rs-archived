@@ -1,0 +1,17 @@
+<div class="card-footer clearfix">
+  <ul class="pagination pagination-sm m-0 float-right">
+    <li class="page-item"><a class="page-link" href="#">«</a></li>
+    {% for i in 0..subject_list.total_pages %}
+    <li class="page-item">
+      {% match arg.keyword %} {% when Some with (keyword) %}
+      <a class="page-link" href="?page={{ i }}&keyword={{ keyword }}">{{
+        i + 1
+      }}</a>
+      {% when None %}
+      <a class="page-link" href="?page={{ i }}">{{ i + 1 }}</a>
+      {% endmatch %}
+    </li>
+    {% endfor %}
+    <li class="page-item"><a class="page-link" href="#">»</a></li>
+  </ul>
+</div>

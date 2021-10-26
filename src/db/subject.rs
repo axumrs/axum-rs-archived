@@ -2,7 +2,7 @@
 
 use crate::error::AppError;
 use crate::form::{CreateSubject, UpdateSubject};
-use crate::model::{Subject, SubjectID};
+use crate::model::{Subject, SubjectID, SubjectList};
 use crate::Result;
 use deadpool_postgres::Client;
 use tokio_postgres::types::ToSql;
@@ -63,16 +63,17 @@ pub async fn select(
     condition: &str,
     args: &[&(dyn ToSql + Sync)],
     page: u32,
-) -> Result<Pagination<Vec<Subject>>> {
+) -> Result<Pagination<Vec<SubjectList>>> {
     let sql = SelectStmt::builder()
         .table(TABLE_NAME)
-        .fields("id, name, slug, summary, is_del")
+        .fields("id, name, slug, is_del")
         .condition(Some(condition))
         .order(Some("id DESC"))
         .limit(Some(PAGE_SIZE))
         .offset(Some(page * PAGE_SIZE as u32))
         .build();
-    let result = query::<Subject>(client, &sql, args).await?;
+    tracing::debug!("{}", sql);
+    let result = query::<SubjectList>(client, &sql, args).await?;
     let total_records = count(client, Some(condition), args).await?;
     Ok(Pagination::new(page, PAGE_SIZE, total_records, result))
 }
@@ -148,7 +149,7 @@ pub async fn create(client: &Client, cs: &CreateSubject) -> Result<SubjectID> {
 /// * `client` - 数据库连接对象
 /// * `us` - 输入的主题信息
 pub async fn update(client: &Client, us: &UpdateSubject) -> Result<bool> {
-    if is_exists(client, Some("slug=$1 AND id=$2"), &[&us.slug, &us.id]).await? {
+    if is_exists(client, Some("slug=$1 AND id<>$2"), &[&us.slug, &us.id]).await? {
         return Err(AppError::is_exists(&format!(
             "主题的固定链接 '{}' 已存在",
             &us.slug
@@ -156,8 +157,8 @@ pub async fn update(client: &Client, us: &UpdateSubject) -> Result<bool> {
     }
     let result = execute(
         client,
-        "UPDATE subject SET slug=$1, summary=$2 WHERE id=$3",
-        &[&us.slug, &us.summary, &us.id],
+        "UPDATE subject SET name=$1, slug=$2, summary=$3 WHERE id=$4",
+        &[&us.name, &us.slug, &us.summary, &us.id],
     )
     .await?;
     match result {
@@ -174,11 +175,10 @@ pub async fn update(client: &Client, us: &UpdateSubject) -> Result<bool> {
 /// * `id` - 要操作的主题ID
 /// * `is_del_opt` - 是否为删除操作
 async fn del_or_restore(client: &Client, id: i32, is_del_opt: bool) -> Result<bool> {
-    let is_del = if is_del_opt { true } else { false };
     let result = execute(
         client,
         "UPDATE subject SET is_del=$1 WHERE id=$2",
-        &[&is_del, &id],
+        &[&is_del_opt, &id],
     )
     .await?;
     match result {

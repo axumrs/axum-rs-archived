@@ -13,6 +13,14 @@ pub struct Subject {
     pub summary: String,
     pub is_del: bool,
 }
+#[derive(PostgresMapper)]
+#[pg_mapper(table = "subject")]
+pub struct SubjectList {
+    pub id: i32,
+    pub name: String,
+    pub slug: String,
+    pub is_del: bool,
+}
 
 #[derive(PostgresMapper)]
 #[pg_mapper(table = "subject")]

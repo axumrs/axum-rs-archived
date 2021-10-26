@@ -30,6 +30,12 @@ async fn main() {
             "/subject/add",
             get(backend::subject::add).post(backend::subject::add_action),
         )
+        .route(
+            "/subject/edit/:id",
+            get(backend::subject::edit).post(backend::subject::edit_action),
+        )
+        .route("/subject/del/:id", get(backend::subject::del))
+        .route("/subject/restore/:id", get(backend::subject::restore))
         .layer(CookieManagerLayer::new());
     let static_serve = service::get(ServeDir::new("static")).handle_error(|err| {
         Ok::<_, Infallible>((
