@@ -2,6 +2,7 @@ CREATE TABLE subject (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     slug VARCHAR(100) NOT NULL,
+    summary VARCHAR(255) NOT NULL,
     is_del BOOLEAN NOT NULL DEFAULT FALSE,
     UNIQUE(slug)
 );

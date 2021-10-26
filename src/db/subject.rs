@@ -66,7 +66,7 @@ pub async fn select(
 ) -> Result<Pagination<Vec<Subject>>> {
     let sql = SelectStmt::builder()
         .table(TABLE_NAME)
-        .fields("id, name, slug, is_del")
+        .fields("id, name, slug, summary, is_del")
         .condition(Some(condition))
         .order(Some("id DESC"))
         .limit(Some(PAGE_SIZE))
@@ -91,7 +91,7 @@ pub async fn find(
 ) -> Result<Subject> {
     let sql = SelectStmt::builder()
         .table(TABLE_NAME)
-        .fields("id, name, slug, is_del")
+        .fields("id, name, slug,summary,is_del")
         .condition(condition)
         .limit(Some(1))
         .build();
@@ -134,8 +134,8 @@ pub async fn create(client: &Client, cs: &CreateSubject) -> Result<SubjectID> {
             &cs.slug
         )));
     };
-    let sql = "INSERT INTO subject (name, slug) VALUES ($1, $2) RETURNING id";
-    query::<SubjectID>(client, sql, &[&cs.name, &cs.slug])
+    let sql = "INSERT INTO subject (name, slug, summary) VALUES ($1, $2, $3) RETURNING id";
+    query::<SubjectID>(client, sql, &[&cs.name, &cs.slug, &cs.summary])
         .await?
         .pop()
         .ok_or(AppError::db_error_from_str("插入主题失败"))
@@ -156,8 +156,8 @@ pub async fn update(client: &Client, us: &UpdateSubject) -> Result<bool> {
     }
     let result = execute(
         client,
-        "UPDATE subject SET slug=$1 WHERE id=$2",
-        &[&us.slug, &us.id],
+        "UPDATE subject SET slug=$1, summary=$2 WHERE id=$3",
+        &[&us.slug, &us.summary, &us.id],
     )
     .await?;
     match result {

@@ -10,6 +10,7 @@ pub struct Subject {
     pub id: i32,
     pub name: String,
     pub slug: String,
+    pub summary: String,
     pub is_del: bool,
 }
 
