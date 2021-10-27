@@ -8,6 +8,7 @@
         <tr>
             <th>名称</th>
             <th>固定链接</th>
+            <th>状态</th>
             <th>操作</th>
         </tr>
     </thead>
@@ -16,8 +17,19 @@
         <td> {{ row.name }}</td>
         <td> {{ row.slug }}</td>
         <td>
+            {% if row.is_del %}
+            <span class="badge badge-danger">已删除</span>
+            {% else %}
+            <span class="badge badge-success">正常</span>
+            {% endif %}
+        </td>
+        <td>
             <a href="/admin/subject/edit/{{row.id}}" class="btn btn-primary btn-xs"><i class="fa fa-pen"></i> 修改</a>
+            {% if row.is_del %}
+            <a href="/admin/subject/restore/{{row.id}}" class="btn btn-success btn-xs" onclick="if(!confirm('确定恢复')) return false"><i class="fa fa-reply"></i> 恢复</a>
+            {% else %}
             <a href="/admin/subject/del/{{row.id}}" class="btn btn-danger btn-xs" onclick="if(!confirm('确定删除')) return false"><i class="fa fa-trash"></i> 删除</a>
+            {% endif %}
         </td>
     </tr>
     {% endfor %}
@@ -26,3 +38,35 @@
 {% block pagination %}
 {% include "../pagination.html" %}
 {% endblock %}
+{% block toolbar%}
+<div class="card-header">
+    <div class="btn-group btn-group-sm">
+        <a href="/admin/subject/add" class="btn btn-info btn-sm"><i class="fa fa-plus"></i> 增加</a>
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-default dropdown-toggle dropdown-icon btn-sm" data-toggle="dropdown">
+                <i class="fa fa-filter"></i> 过滤
+            </button>
+            <div class="dropdown-menu dropdown-menu-sm">
+                {% if arg.is_del() %}
+                <a class="dropdown-item dropdown-item-sm" href="?is_del=false">未删除</a>
+                <a class="dropdown-item dropdown-item-sm active" href="?is_del=true">已删除</a>
+                {%else%}
+                <a class="dropdown-item dropdown-item-sm active" href="?is_del=false">未删除</a>
+                <a class="dropdown-item dropdown-item-sm" href="?is_del=true">已删除</a>
+                {%endif%}
+            </div>
+        </div>
+    </div>
+    <div class="card-tools">
+        <div class="input-group input-group-sm">
+            <input type="text" class="form-control" placeholder="输入关键字" id="keyword" name="keyword" autocomplete="off" value="{{ arg.keyword() }}">
+            <div class="input-group-append">
+                <button type="button" class="btn btn-primary" onclick="location.href='?is_del={{arg.is_del()}}&keyword=' + $('#keyword').val()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- /.card-tools -->
+</div>
+{%endblock %}

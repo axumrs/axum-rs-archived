@@ -11,7 +11,10 @@ use crate::{
     db::subject,
     error::AppError,
     form,
-    handler::{helper::get_client, redirect::redirect},
+    handler::{
+        helper::{get_client, log_error},
+        redirect::redirect,
+    },
     html::backend::subject::{AddTemplate, EditTemplate, IndexTemplate},
     model::AppState,
     Result,
@@ -24,13 +27,26 @@ pub async fn index(
 ) -> Result<Html<String>> {
     let client: Client = get_client(state, "backend_subject_index").await?;
     let args = args.unwrap().0;
-    let subject_list =
-        subject::select(&client, "is_del=false", &[], args.page.unwrap_or(0)).await?;
+    let q_keyword = format!("%{}%", args.keyword());
+    let subject_list = subject::select(
+        &client,
+        "is_del=$1 AND name LIKE $2",
+        &[&args.is_del(), &q_keyword],
+        args.page.unwrap_or(0),
+    )
+    .await
+    .map_err(|err| {
+        tracing::debug!("{:?}", err);
+        err
+    })?;
     let tmpl = IndexTemplate {
         arg: args,
         subject_list,
     };
-    let out = tmpl.render().map_err(AppError::tmpl_error)?;
+    let out = tmpl.render().map_err(|err| {
+        tracing::debug!("{:?}", err);
+        AppError::tmpl_error(err)
+    })?;
     Ok(Html(out))
 }
 pub async fn add() -> Result<Html<String>> {
