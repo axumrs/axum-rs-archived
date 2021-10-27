@@ -5,7 +5,7 @@ use crate::{arg, db::pagination::Pagination, model};
 #[derive(Template)]
 #[template(path = "backend/subject/index.html")]
 pub struct IndexTemplate {
-    pub subject_list: Pagination<Vec<model::SubjectList>>,
+    pub list: Pagination<Vec<model::SubjectList>>,
     pub arg: arg::SubjectBackendQueryArg,
 }
 #[derive(Template)]

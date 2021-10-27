@@ -36,7 +36,7 @@ pub async fn index(
     .map_err(log_error(handler_name.to_string()))?;
     let tmpl = IndexTemplate {
         arg: args,
-        subject_list,
+        list: subject_list,
     };
     render(tmpl, handler_name)
 }

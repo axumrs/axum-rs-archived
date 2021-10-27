@@ -1,0 +1,13 @@
+{% extends "../base.html" %} 
+{% block parent_title %}标签管理 {% endblock %} 
+{% block parent_url %}tag{% endblock %}
+{% block title %}添加标签{% endblock %}
+{% block content %}
+<form action="/admin/tag/add" method="post">
+    <div class="form-group">
+        <label for="name">名称</label>
+        <input type="text" class="form-control" id="name" name="name" placeholder="标签名称" required>
+    </div>
+    <button type="submit" class="btn btn-primary">提交</button>
+</form>
+{% endblock %}
