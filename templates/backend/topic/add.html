@@ -11,19 +11,15 @@
     <div class="form-group">
         <label for="subject_id">专题</label>
         <select class="form-control" id="subject_id" name="subject_id" placeholder="专题" required>
+            <option value="">--请选择--</option>
             {% for subject in subjects %}
             <option value="{{ subject.id }}" data-slug="{{ subject.slug }}">{{ subject.name }}</option>
             {% endfor %}
         </select>
     </div>
     <div class="form-group">
-        <label for="self_slug">固定链接</label>
-        <div class="input-group mb-3">
-            <div class="input-group-prepend">
-                <span class="input-group-text" id="subject_slug">@</span>
-            </div>
-            <input type="text" name="self_slug" id="self_slug" class="form-control" placeholder="固定链接">
-        </div>
+        <label for="slug">固定链接</label>
+        <input type="text" class="form-control" id="slug" name="slug" placeholder="固定链接" required>
     </div>
     <div class="form-group">
         <label for="summary">摘要</label>
@@ -31,15 +27,15 @@
     </div>
     <div class="form-group">
         <label for="src">来源</label>
-        <input type="text" class="form-control" id="src" name="src" placeholder="来源" required>
+        <input type="text" class="form-control" id="src" name="src" placeholder="来源" value="AXUM.RS" required>
     </div>
     <div class="form-group">
         <label for="author">作者</label>
-        <input type="text" class="form-control" id="author" name="author" placeholder="作者" required>
+        <input type="text" class="form-control" id="author" name="author" placeholder="作者" value="AXUM.RS" required>
     </div>
     <div class="form-group">
         <label for="md">内容</label>
-        <textarea class="form-control" id="md" name="md" placeholder="内容" rows="30" required></textarea>
+        <textarea class="form-control" id="md" name="md" placeholder="内容" rows="15" required></textarea>
     </div>
     <div class="form-group">
         <label for="tags">标签</label>

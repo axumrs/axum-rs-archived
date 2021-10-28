@@ -10,6 +10,7 @@ pub mod pagination;
 pub mod select_stmt;
 pub mod subject;
 pub mod tag;
+pub mod topic;
 
 /// 默认分页大小
 const PAGE_SIZE: u8 = 30;

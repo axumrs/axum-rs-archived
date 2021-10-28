@@ -13,14 +13,13 @@ CREATE TABLE topic (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     subject_id INTEGER NOT NULL REFERENCES subject(id),
-    self_slug VARCHAR(100) NOT NULL,
     slug VARCHAR(100) NOT NULL,
     summary VARCHAR(255) NOT NULL,
     author VARCHAR(50) NOT NULL,
     hit INTEGER NOT NULL DEFAULT 0,
     dateline INTEGER NOT NULL DEFAULT 0,
     is_del BOOLEAN NOT NULL DEFAULT FALSE,
-    UNIQUE(slug)
+    UNIQUE(subject_id, slug)
 );
 
 CREATE INDEX idx_topic_slug ON topic (slug);

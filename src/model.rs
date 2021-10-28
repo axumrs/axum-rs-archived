@@ -28,11 +28,12 @@ pub struct SubjectID {
     pub id: i32,
 }
 
+#[derive(PostgresMapper)]
+#[pg_mapper(table = "topic")]
 pub struct Topic {
     pub id: i64,
     pub title: String,
     pub subject_id: i32,
-    pub self_slug: String,
     pub slug: String,
     pub summary: String,
     pub src: String,
@@ -41,7 +42,14 @@ pub struct Topic {
     pub dateline: i32,
     pub is_del: bool,
 }
+#[derive(PostgresMapper)]
+#[pg_mapper(table = "topic")]
+pub struct TopicID {
+    pub id: i64,
+}
 
+#[derive(PostgresMapper)]
+#[pg_mapper(table = "topic_content")]
 pub struct TopicContent {
     pub topic_id: i64,
     pub md: String,
@@ -61,6 +69,8 @@ pub struct TagID {
     pub id: i32,
 }
 
+#[derive(PostgresMapper)]
+#[pg_mapper(table = "topic_tag")]
 pub struct TopicTag {
     pub topic_id: i64,
     pub tag_id: i32,

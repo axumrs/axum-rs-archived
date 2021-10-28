@@ -206,3 +206,13 @@ pub async fn delete(client: &Client, id: i32) -> Result<bool> {
 pub async fn restore(client: &Client, id: i32) -> Result<bool> {
     del_or_restore(client, id, false).await
 }
+
+pub async fn all(client: &Client) -> Result<Vec<SubjectList>> {
+    let sql = SelectStmt::builder()
+        .table(TABLE_NAME)
+        .fields("id, name, slug, is_del")
+        .order(Some("id DESC"))
+        .condition(Some("is_del=false"))
+        .build();
+    super::query::<SubjectList>(client, &sql, &[]).await
+}
