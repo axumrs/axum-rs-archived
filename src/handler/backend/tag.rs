@@ -1,13 +1,18 @@
 use crate::{
     arg,
     db::tag,
-    handler::helper::{get_client, log_error, render},
-    html::backend::tag::IndexTemplate,
+    form,
+    handler::{
+        helper::{get_client, log_error, render},
+        redirect::redirect,
+    },
+    html::backend::tag::{AddTemplate, EditTemplate, IndexTemplate},
     model::AppState,
     Result,
 };
 use axum::{
-    extract::{Extension, Query},
+    extract::{Extension, Form, Path, Query},
+    http::{HeaderMap, StatusCode},
     response::Html,
 };
 use std::sync::Arc;
@@ -27,4 +32,65 @@ pub async fn index(
         list: tag_list,
     };
     render(tmpl, handler_name)
+}
+pub async fn add() -> Result<Html<String>> {
+    let tmpl = AddTemplate {};
+    render(tmpl, "backend_tag_add")
+}
+pub async fn add_action(
+    Extension(state): Extension<Arc<AppState>>,
+    Form(ct): Form<form::CreateTag>,
+) -> Result<(StatusCode, HeaderMap, ())> {
+    let handler_name = "backend_tag_add_action";
+    let client = get_client(state, handler_name).await?;
+    tag::create(&client, &ct)
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    redirect("/admin/tag?msg=标签添加成功")
+}
+
+pub async fn edit(
+    Extension(state): Extension<Arc<AppState>>,
+    Path(id): Path<i32>,
+) -> Result<Html<String>> {
+    let handler_name = "backend_tag_edit";
+    let client = get_client(state, handler_name).await?;
+    let tag = tag::find(&client, Some("id=$1"), &[&id])
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    let tmpl = EditTemplate { tag };
+    render(tmpl, handler_name)
+}
+pub async fn edit_action(
+    Extension(state): Extension<Arc<AppState>>,
+    Form(ut): Form<form::UpdateTag>,
+) -> Result<(StatusCode, HeaderMap, ())> {
+    let handler_name = "backend_tag_edit_action";
+    let client = get_client(state, handler_name).await?;
+    tag::update(&client, &ut)
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    redirect("/admin/tag?msg=标签修改成功")
+}
+pub async fn del(
+    Extension(state): Extension<Arc<AppState>>,
+    Path(id): Path<i32>,
+) -> Result<(StatusCode, HeaderMap, ())> {
+    let handler_name = "backend_tag_del";
+    let client = get_client(state, handler_name).await?;
+    tag::del(&client, id)
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    redirect("/admin/tag?msg=标签删除成功")
+}
+pub async fn restore(
+    Extension(state): Extension<Arc<AppState>>,
+    Path(id): Path<i32>,
+) -> Result<(StatusCode, HeaderMap, ())> {
+    let handler_name = "backend_tag_restore";
+    let client = get_client(state, handler_name).await?;
+    tag::restore(&client, id)
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    redirect("/admin/tag?msg=标签恢复成功")
 }

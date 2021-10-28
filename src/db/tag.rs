@@ -73,14 +73,14 @@ pub async fn del(client: &Client, id: i32) -> Result<u64> {
 pub async fn restore(client: &Client, id: i32) -> Result<u64> {
     super::restore(client, "tag", &id).await
 }
-pub async fn create_tag(client: &Client, ct: CreateTag) -> Result<TagID> {
+pub async fn create(client: &Client, ct: &CreateTag) -> Result<TagID> {
     if name_is_exists(client, &ct.name).await? {
         return Err(AppError::is_exists("同名的标签已存在"));
     }
     let sql = "INSERT INTO tag (name, is_del) VALUES ($1, false) RETURNING id";
     query_one::<TagID>(client, sql, &[&ct.name], Some("创建标签失败")).await
 }
-pub async fn update_tag(client: &Client, ut: UpdateTag) -> Result<u64> {
+pub async fn update(client: &Client, ut: &UpdateTag) -> Result<u64> {
     if is_exists(client, "name=$1 AND id<>$2", &[&ut.name, &ut.id]).await? {
         return Err(AppError::is_exists("同名的标签已存在"));
     }
