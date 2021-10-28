@@ -38,6 +38,10 @@ async fn main() {
         .route("/subject/restore/:id", get(backend::subject::restore))
         .route("/tag", get(backend::tag::index))
         .route(
+            "/tag/add",
+            get(backend::tag::add).post(backend::tag::add_action),
+        )
+        .route(
             "/tag/edit/:id",
             get(backend::tag::edit).post(backend::tag::edit_action),
         )

@@ -23,10 +23,16 @@ pub async fn index(
 ) -> Result<Html<String>> {
     let handler_name = "backend_tag_index";
     let args = args.unwrap().0;
+    let q_keyword = format!("%{}%", args.keyword());
     let client = get_client(state, handler_name).await?;
-    let tag_list = tag::select(&client, None, &[], args.page.unwrap_or(0))
-        .await
-        .map_err(log_error(handler_name.to_string()))?;
+    let tag_list = tag::select(
+        &client,
+        Some("is_del=$1 AND name ILIKE $2"),
+        &[&args.is_del(), &q_keyword],
+        args.page.unwrap_or(0),
+    )
+    .await
+    .map_err(log_error(handler_name.to_string()))?;
     let tmpl = IndexTemplate {
         arg: args,
         list: tag_list,

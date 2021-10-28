@@ -22,11 +22,11 @@
             {% endif %}
         </td>
         <td>
-            <a href="/admin/subject/edit/{{row.id}}" class="btn btn-primary btn-xs"><i class="fa fa-pen"></i> 修改</a>
+            <a href="/admin/tag/edit/{{row.id}}" class="btn btn-primary btn-xs"><i class="fa fa-pen"></i> 修改</a>
             {% if row.is_del %}
-            <a href="/admin/subject/restore/{{row.id}}" class="btn btn-success btn-xs" onclick="if(!confirm('确定恢复')) return false"><i class="fa fa-reply"></i> 恢复</a>
+            <a href="/admin/tag/restore/{{row.id}}" class="btn btn-success btn-xs" onclick="if(!confirm('确定恢复')) return false"><i class="fa fa-reply"></i> 恢复</a>
             {% else %}
-            <a href="/admin/subject/del/{{row.id}}" class="btn btn-danger btn-xs" onclick="if(!confirm('确定删除')) return false"><i class="fa fa-trash"></i> 删除</a>
+            <a href="/admin/tag/del/{{row.id}}" class="btn btn-danger btn-xs" onclick="if(!confirm('确定删除')) return false"><i class="fa fa-trash"></i> 删除</a>
             {% endif %}
         </td>
     </tr>
@@ -39,7 +39,7 @@
 {% block toolbar%}
 <div class="card-header">
     <div class="btn-group btn-group-sm">
-        <a href="/admin/subject/add" class="btn btn-info btn-sm"><i class="fa fa-plus"></i> 增加</a>
+        <a href="/admin/tag/add" class="btn btn-info btn-sm"><i class="fa fa-plus"></i> 增加</a>
         <div class="btn-group btn-group-sm">
             <button type="button" class="btn btn-default dropdown-toggle dropdown-icon btn-sm" data-toggle="dropdown">
                 <i class="fa fa-filter"></i> 过滤
