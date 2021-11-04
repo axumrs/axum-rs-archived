@@ -6,7 +6,7 @@ use axum::{
 };
 
 use crate::{
-    db::subject,
+    db::{subject, topic},
     form,
     handler::{
         helper::{get_client, log_error, render},
@@ -33,6 +33,9 @@ pub async fn add_action(
     Form(ct): Form<form::CreateTopic>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_topic_add";
-    let client = get_client(state, handler_name).await?;
+    let mut client = get_client(state, handler_name).await?;
+    topic::create(&mut client, &ct, "HTML")
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
     redirect("/admin/topic?msg=文章添加成功")
 }
