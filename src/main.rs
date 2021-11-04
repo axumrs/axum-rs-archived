@@ -47,6 +47,7 @@ async fn main() {
         )
         .route("/tag/del/:id", get(backend::tag::del))
         .route("/tag/restore/:id", get(backend::tag::restore))
+        .route("/topic", get(backend::topic::index))
         .route(
             "/topic/add",
             get(backend::topic::add).post(backend::topic::add_action),

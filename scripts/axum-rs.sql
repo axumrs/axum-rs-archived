@@ -45,3 +45,27 @@ CREATE TABLE topic_tag (
     is_del BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY(topic_id,tag_id)
 );
+
+-- 视图
+-- 用于列表显示的文章和主题
+CREATE VIEW v_topic_subject_list AS
+    SELECT t.id, t.title, t.slug, s.name AS subject_name, s.slug AS subject_slug, t.subject_id, t.is_del, s.is_del AS subject_is_del
+    FROM topic AS t
+    INNER JOIN subject AS s
+    ON t.subject_id=s.id;
+
+-- 用于列表显示的文章和主题及标签
+CREATE VIEW v_topic_subject_list_with_tags AS
+    SELECT tsl.id,title,slug,subject_name,subject_slug,subject_id,tsl.is_del,subject_is_del
+        ,tt.tag_ids,tt.tag_names
+    FROM v_topic_subject_list AS tsl
+    LEFT JOIN (
+        SELECT
+            tt.topic_id,
+            array_agg(t.name) AS tag_names,
+            array_agg(tt.tag_id) AS tag_ids
+        FROM topic_tag AS tt
+        INNER JOIN tag AS t ON t.id=tt.tag_id
+        WHERE tt.is_del=false AND t.is_del=false
+        GROUP BY tt.topic_id
+    ) AS tt on tt.topic_id=tsl.id;

@@ -76,3 +76,16 @@ pub struct TopicTag {
     pub tag_id: i32,
     pub is_del: bool,
 }
+
+#[derive(PostgresMapper)]
+#[pg_mapper(table = "v_topic_subject_list")]
+pub struct TopicSubjectListView {
+    pub id: i64,
+    pub title: String,
+    pub slug: String,
+    pub subject_name: String,
+    pub subject_slug: String,
+    pub subject_id: i32,
+    pub is_del: bool,
+    pub subject_is_del: bool,
+}

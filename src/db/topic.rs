@@ -1,12 +1,15 @@
 use crate::{
     error::AppError,
     form::CreateTopic,
-    model::{TagID, TopicID},
+    model::{TagID, TopicID, TopicSubjectListView},
     time::now,
     Result,
 };
 use deadpool_postgres::Client;
 use tokio_pg_mapper::FromTokioPostgresRow;
+use tokio_postgres::types::ToSql;
+
+use super::{pagination::Pagination, select_stmt::SelectStmt, PAGE_SIZE};
 
 pub async fn create(client: &mut Client, ct: &CreateTopic, html: &str) -> Result<TopicID> {
     let tx = client.transaction().await.map_err(AppError::from)?;
@@ -139,4 +142,26 @@ pub async fn create(client: &mut Client, ct: &CreateTopic, html: &str) -> Result
     }
     tx.commit().await.map_err(AppError::from)?;
     Ok(topic_id)
+}
+
+pub async fn select(
+    client: &Client,
+    condition: Option<&str>,
+    args: &[&(dyn ToSql + Sync)],
+    page: u32,
+) -> Result<Pagination<Vec<TopicSubjectListView>>> {
+    let sql = SelectStmt::builder()
+        .table("v_topic_subject_list")
+        .fields("id,title,slug,subject_name,subject_slug,subject_id,is_del,subject_is_del")
+        .condition(condition)
+        .order(Some("id DESC"))
+        .limit(Some(PAGE_SIZE))
+        .offset(Some(page * PAGE_SIZE as u32))
+        .build();
+    let count_sql = SelectStmt::builder()
+        .table("v_topic_subject_list")
+        .fields("COUNT(*)")
+        .condition(condition)
+        .build();
+    super::select(client, &sql, &count_sql, args, page).await
 }
