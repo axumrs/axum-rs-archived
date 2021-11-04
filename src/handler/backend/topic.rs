@@ -13,6 +13,7 @@ use crate::{
         redirect::redirect,
     },
     html::backend::topic::AddTemplate,
+    md,
     model::AppState,
     Result,
 };
@@ -33,8 +34,9 @@ pub async fn add_action(
     Form(ct): Form<form::CreateTopic>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_topic_add";
+    let html_text = md::to_html(&ct.md);
     let mut client = get_client(state, handler_name).await?;
-    topic::create(&mut client, &ct, "HTML")
+    topic::create(&mut client, &ct, &html_text)
         .await
         .map_err(log_error(handler_name.to_string()))?;
     redirect("/admin/topic?msg=文章添加成功")
