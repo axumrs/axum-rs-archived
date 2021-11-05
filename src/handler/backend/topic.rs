@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Extension, Form, Query},
+    extract::{Extension, Form, Path, Query},
     http::HeaderMap,
     http::StatusCode,
     response::Html,
@@ -47,7 +47,7 @@ pub async fn index(
     Extension(state): Extension<Arc<AppState>>,
     args: Option<Query<arg::BackendQueryArg>>,
 ) -> Result<Html<String>> {
-    let handler_name = "backend_tag_index";
+    let handler_name = "backend_topic_index";
     let client = get_client(state, handler_name).await?;
     let args = args.unwrap().0;
     let q_keyword = format!("%{}%", args.keyword());
@@ -61,4 +61,37 @@ pub async fn index(
     .map_err(log_error(handler_name.to_string()))?;
     let tmpl = IndexTemplate { list, arg: args };
     render(tmpl, handler_name)
+}
+
+pub async fn del(
+    Extension(state): Extension<Arc<AppState>>,
+    Path(id): Path<i64>,
+) -> Result<(StatusCode, HeaderMap, ())> {
+    let handler_name = "backend_topic_del";
+    let mut client = get_client(state, handler_name).await?;
+    let (topic_rows, topic_tag_rows) = topic::del_or_restore(&mut client, id, true)
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    tracing::debug!(
+        "删除文章数：{}, 删除关联标签数：{}",
+        topic_rows,
+        topic_tag_rows
+    );
+    redirect("/admin/topic?msg=文章删除成功")
+}
+pub async fn restore(
+    Extension(state): Extension<Arc<AppState>>,
+    Path(id): Path<i64>,
+) -> Result<(StatusCode, HeaderMap, ())> {
+    let handler_name = "backend_topic_restore";
+    let mut client = get_client(state, handler_name).await?;
+    let (topic_rows, topic_tag_rows) = topic::del_or_restore(&mut client, id, false)
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    tracing::debug!(
+        "还原文章数：{}, 还原关联标签数：{}",
+        topic_rows,
+        topic_tag_rows
+    );
+    redirect("/admin/topic?msg=文章恢复成功")
 }

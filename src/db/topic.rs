@@ -165,3 +165,41 @@ pub async fn select(
         .build();
     super::select(client, &sql, &count_sql, args, page).await
 }
+
+pub async fn del_or_restore(client: &mut Client, id: i64, is_del: bool) -> Result<(u64, u64)> {
+    let tx = client.transaction().await.map_err(AppError::from)?;
+    let stmt = match tx.prepare("UPDATE topic SET is_del=$1 WHERE id=$2").await {
+        Ok(s) => s,
+        Err(err) => {
+            tx.rollback().await.map_err(AppError::from)?;
+            return Err(AppError::from(err));
+        }
+    };
+    let topic_rows = match tx.execute(&stmt, &[&is_del, &id]).await {
+        Ok(s) => s,
+        Err(err) => {
+            tx.rollback().await.map_err(AppError::from)?;
+            return Err(AppError::from(err));
+        }
+    };
+    let stmt = match tx
+        .prepare("UPDATE topic_tag SET is_del=$1 WHERE topic_id=$2")
+        .await
+    {
+        Ok(s) => s,
+        Err(err) => {
+            tx.rollback().await.map_err(AppError::from)?;
+            return Err(AppError::from(err));
+        }
+    };
+    let topic_tag_rows = match tx.execute(&stmt, &[&is_del, &id]).await {
+        Ok(s) => s,
+        Err(err) => {
+            tx.rollback().await.map_err(AppError::from)?;
+            return Err(AppError::from(err));
+        }
+    };
+
+    tx.commit().await.map_err(AppError::from)?;
+    Ok((topic_rows, topic_tag_rows))
+}
