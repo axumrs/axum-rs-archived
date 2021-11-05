@@ -34,3 +34,16 @@ pub struct CreateTopic {
     pub md: String,
     pub tags: String,
 }
+
+#[derive(Deserialize)]
+pub struct UpdateTopic {
+    pub id: i64,
+    pub title: String,
+    pub subject_id: i32,
+    pub slug: String,
+    pub summary: String,
+    pub src: String,
+    pub author: String,
+    pub md: String,
+    pub tags: String,
+}

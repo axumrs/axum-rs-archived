@@ -16,6 +16,7 @@ CREATE TABLE topic (
     slug VARCHAR(100) NOT NULL,
     summary VARCHAR(255) NOT NULL,
     author VARCHAR(50) NOT NULL,
+    src VARCHAR(50) NOT NULL,
     hit INTEGER NOT NULL DEFAULT 0,
     dateline INTEGER NOT NULL DEFAULT 0,
     is_del BOOLEAN NOT NULL DEFAULT FALSE,
@@ -69,3 +70,19 @@ CREATE VIEW v_topic_subject_list_with_tags AS
         WHERE tt.is_del=false AND t.is_del=false
         GROUP BY tt.topic_id
     ) AS tt on tt.topic_id=tsl.id;
+
+-- 用于修改的文章
+CREATE VIEW v_topic_with_md_and_tags_for_edit AS
+SELECT 
+	t.id,title,subject_id,slug,summary,author,src,c.md,tt.tag_names
+FROM topic AS t
+INNER JOIN topic_content AS c ON c.topic_id=t.id
+LEFT JOIN (
+	SELECT 
+		tt.topic_id,
+		array_agg(t.name) AS tag_names
+	FROM topic_tag AS tt
+	INNER JOIN tag AS t ON t.id=tt.tag_id
+	WHERE tt.is_del=false AND t.is_del=false
+	GROUP BY tt.topic_id
+) AS tt on tt.topic_id=t.id;

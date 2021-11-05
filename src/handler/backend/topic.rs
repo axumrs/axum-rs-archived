@@ -13,7 +13,7 @@ use crate::{
         helper::{get_client, log_error, render},
         redirect::redirect,
     },
-    html::backend::topic::{AddTemplate, IndexTemplate},
+    html::backend::topic::{AddTemplate, EditTemplate, IndexTemplate},
     md,
     model::AppState,
     Result,
@@ -94,4 +94,35 @@ pub async fn restore(
         topic_tag_rows
     );
     redirect("/admin/topic?msg=文章恢复成功")
+}
+pub async fn edit(
+    Extension(state): Extension<Arc<AppState>>,
+    Path(id): Path<i64>,
+) -> Result<Html<String>> {
+    let handler_name = "backend_topic_edit";
+    let client = get_client(state, handler_name).await?;
+    let subjects = subject::all(&client)
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    let topic_rs = topic::find_to_edit(&client, id)
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    let tmpl = EditTemplate {
+        subjects,
+        topic: topic_rs,
+    };
+    render(tmpl, handler_name)
+}
+
+pub async fn edit_action(
+    Extension(state): Extension<Arc<AppState>>,
+    Form(ut): Form<form::UpdateTopic>,
+) -> Result<(StatusCode, HeaderMap, ())> {
+    let handler_name = "backend_topic_edit_action";
+    let mut client = get_client(state, handler_name).await?;
+    let html_text = md::to_html(&ut.md);
+    topic::update(&mut client, &ut, &html_text)
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    redirect("/admin/topic?msg=文章修改成功")
 }

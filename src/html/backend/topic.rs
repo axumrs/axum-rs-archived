@@ -12,3 +12,9 @@ pub struct IndexTemplate {
     pub list: Pagination<Vec<model::TopicSubjectListView>>,
     pub arg: arg::BackendQueryArg,
 }
+#[derive(Template)]
+#[template(path = "backend/topic/edit.html")]
+pub struct EditTemplate {
+    pub subjects: Vec<model::SubjectList>,
+    pub topic: model::TopicWithMdAndTagsForEdit,
+}
