@@ -11,13 +11,19 @@ pub struct WebConfig {
     pub secret_key: String,
 }
 
+#[derive(Deserialize)]
+pub struct RedisConfig {
+    pub dsn: String,
+}
+
 /// 配置
 #[derive(Deserialize)]
 pub struct Config {
     /// web配置
-    pub web:WebConfig,
+    pub web: WebConfig,
     /// Postgres配置
-    pub pg:deadpool_postgres::Config,
+    pub pg: deadpool_postgres::Config,
+    pub redis: RedisConfig,
 }
 
 impl Config {

@@ -1,7 +1,9 @@
+use redis::Client;
 use tokio_pg_mapper_derive::PostgresMapper;
 
 pub struct AppState {
     pub pool: deadpool_postgres::Pool,
+    pub rdc: Client,
 }
 
 #[derive(PostgresMapper)]

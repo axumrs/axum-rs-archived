@@ -23,9 +23,10 @@ async fn main() {
     dotenv().ok();
     let cfg = config::Config::from_env().unwrap();
     let pool = cfg.pg.create_pool(tokio_postgres::NoTls).unwrap();
+    let rdc = redis::Client::open(cfg.redis.dsn).unwrap();
     tracing::info!("Web服务监听于{}", &cfg.web.addr);
 
-    let state = Arc::new(AppState { pool });
+    let state = Arc::new(AppState { pool, rdc });
 
     let backend_router = Router::new()
         .route("/subject", get(backend::subject::index))

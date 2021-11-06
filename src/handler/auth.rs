@@ -6,7 +6,7 @@ use axum::{
     response::Html,
 };
 
-use crate::{error::AppError, form, html::auth::LoginTemplate, model::AppState, Result};
+use crate::{error::AppError, form, html::auth::LoginTemplate, model::AppState, rdb, Result};
 
 use super::{helper::render, redirect::redirect_with_cookie};
 
@@ -16,13 +16,15 @@ pub async fn admin_login_ui() -> Result<Html<String>> {
     render(tmpl, handler_name)
 }
 pub async fn admin_login(
-    Extension(_state): Extension<Arc<AppState>>,
+    Extension(state): Extension<Arc<AppState>>,
     Form(login): Form<form::AdminLogin>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     if &login.username != "foo" || &login.password != "bar" {
         return Err(AppError::auth_error("用户名或密码错误"));
     }
     // TODO: 加入redis
+    let client = state.rdc.clone();
+    rdb::set(client, "user", &login.username, 50).await?;
     let cookie = format!("user={}", &login.username);
     redirect_with_cookie("/admin", Some(&cookie))
 }

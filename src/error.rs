@@ -20,6 +20,7 @@ pub enum AppErrorType {
     /// 模板
     Template,
     AuthError,
+    RedisError,
     /// 通用错误
     Common,
 }
@@ -106,6 +107,12 @@ impl From<tokio_postgres::Error> for AppError {
 impl From<askama::Error> for AppError {
     fn from(err: askama::Error) -> Self {
         Self::tmpl_error(err)
+    }
+}
+
+impl From<redis::RedisError> for AppError {
+    fn from(err: redis::RedisError) -> Self {
+        Self::from_err(err, AppErrorType::RedisError)
     }
 }
 

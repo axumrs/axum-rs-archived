@@ -8,6 +8,7 @@ pub mod html;
 pub mod md;
 pub mod middleware;
 pub mod model;
+pub mod rdb;
 pub mod time;
 
 /// 结果
