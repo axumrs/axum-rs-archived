@@ -1,13 +1,16 @@
 use std::{convert::Infallible, sync::Arc};
 
-use axum::{handler::get, http::StatusCode, service, AddExtensionLayer, Router};
+use axum::{
+    extract::extractor_middleware, handler::get, http::StatusCode, service, AddExtensionLayer,
+    Router,
+};
 use axum_rs::{
     config,
-    handler::{backend, frontend},
+    handler::{auth::admin_login, backend, frontend},
+    middleware::admin_auth::Auth,
     model::AppState,
 };
 use dotenv::dotenv;
-use tower_cookies::CookieManagerLayer;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 
 #[tokio::main]
@@ -58,7 +61,7 @@ async fn main() {
             "/topic/edit/:id",
             get(backend::topic::edit).post(backend::topic::edit_action),
         )
-        .layer(CookieManagerLayer::new());
+        .layer(extractor_middleware::<Auth>());
     let static_serve = service::get(ServeDir::new("static")).handle_error(|err| {
         Ok::<_, Infallible>((
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -70,6 +73,7 @@ async fn main() {
         .route("/", get(frontend::index::index))
         .nest("/static", static_serve)
         .nest("/admin", backend_router)
+        .route("/login", get(admin_login))
         .layer(TraceLayer::new_for_http())
         .layer(AddExtensionLayer::new(state));
     axum::Server::bind(&cfg.web.addr.parse().unwrap())

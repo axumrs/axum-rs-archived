@@ -47,3 +47,8 @@ pub struct UpdateTopic {
     pub md: String,
     pub tags: String,
 }
+#[derive(Deserialize)]
+pub struct AdminLogin {
+    pub username: String,
+    pub password: String,
+}
