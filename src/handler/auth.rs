@@ -5,8 +5,17 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::Html,
 };
+use serde_json::json;
 
-use crate::{error::AppError, form, html::auth::LoginTemplate, model::AppState, rdb, Result};
+use crate::{
+    error::AppError,
+    form,
+    html::auth::LoginTemplate,
+    model::{AdminSession, AppState},
+    rdb, session,
+    time::now,
+    Result,
+};
 
 use super::{helper::render, redirect::redirect_with_cookie};
 
@@ -22,10 +31,24 @@ pub async fn admin_login(
     if &login.username != "foo" || &login.password != "bar" {
         return Err(AppError::auth_error("用户名或密码错误"));
     }
-    // TODO: 加入redis
+    let data = json!(AdminSession {
+        username: login.username,
+        dateline: now(),
+    });
+    let data = data.to_string();
+    tracing::debug!("data: {:?}", data);
+    let cfg = state.sess_cfg.clone();
+    let session::GeneratedKey {
+        id,
+        cookie_key,
+        redis_key,
+    } = session::gen_key(&cfg);
+    tracing::debug!("{}", &redis_key);
     let client = state.rdc.clone();
-    rdb::set(client, "user", &login.username, 50).await?;
-    let cookie = format!("user={}", &login.username);
+    rdb::set(client, &redis_key, &data, cfg.expired)
+        .await
+        .map_err(AppError::from)?;
+    let cookie = format!("{}={}", cookie_key, id);
     redirect_with_cookie("/admin", Some(&cookie))
 }
 

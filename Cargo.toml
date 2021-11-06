@@ -28,3 +28,5 @@ askama = "0.10"
 tower-http = { version = "0.1", features = ["fs", "trace"] }
 chrono = "0.4"
 redis = { version = "0.21", features = ["tokio-comp", "aio"] }
+bcrypt = "0.10"
+uuid =  {  version = "0.8", features = ["v4", "serde"]}

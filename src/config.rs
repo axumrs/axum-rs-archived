@@ -15,6 +15,12 @@ pub struct WebConfig {
 pub struct RedisConfig {
     pub dsn: String,
 }
+#[derive(Deserialize, Clone)]
+pub struct SessionConfig {
+    pub prefix: String,
+    pub id_name: String,
+    pub expired: usize,
+}
 
 /// 配置
 #[derive(Deserialize)]
@@ -24,6 +30,7 @@ pub struct Config {
     /// Postgres配置
     pub pg: deadpool_postgres::Config,
     pub redis: RedisConfig,
+    pub session: SessionConfig,
 }
 
 impl Config {

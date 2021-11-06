@@ -1,9 +1,13 @@
 use redis::Client;
+use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
+
+use crate::config::SessionConfig;
 
 pub struct AppState {
     pub pool: deadpool_postgres::Pool,
     pub rdc: Client,
+    pub sess_cfg: SessionConfig,
 }
 
 #[derive(PostgresMapper)]
@@ -108,4 +112,9 @@ impl TopicWithMdAndTagsForEdit {
     pub fn tags(&self) -> String {
         self.tag_names.join(",").to_string()
     }
+}
+#[derive(Deserialize, Serialize)]
+pub struct AdminSession {
+    pub username: String,
+    pub dateline: i32,
 }

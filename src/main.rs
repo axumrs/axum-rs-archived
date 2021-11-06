@@ -26,7 +26,11 @@ async fn main() {
     let rdc = redis::Client::open(cfg.redis.dsn).unwrap();
     tracing::info!("Web服务监听于{}", &cfg.web.addr);
 
-    let state = Arc::new(AppState { pool, rdc });
+    let state = Arc::new(AppState {
+        pool,
+        rdc,
+        sess_cfg: cfg.session,
+    });
 
     let backend_router = Router::new()
         .route("/subject", get(backend::subject::index))

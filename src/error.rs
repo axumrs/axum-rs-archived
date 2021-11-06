@@ -115,6 +115,11 @@ impl From<redis::RedisError> for AppError {
         Self::from_err(err, AppErrorType::RedisError)
     }
 }
+impl From<bcrypt::BcryptError> for AppError {
+    fn from(err: bcrypt::BcryptError) -> Self {
+        Self::from_err(err, AppErrorType::Common)
+    }
+}
 
 impl IntoResponse for AppError {
     type Body = Full<Bytes>;

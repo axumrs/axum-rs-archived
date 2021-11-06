@@ -13,3 +13,13 @@ pub async fn set(client: Client, key: &str, value: &str, sec: usize) -> Result<(
     conn.set_ex(key, value, sec).await.map_err(AppError::from)?;
     Ok(())
 }
+pub async fn get(client: Client, key: &str) -> Result<String> {
+    let mut conn = get_conn(client).await?;
+    let s: String = conn.get(key).await.map_err(AppError::from)?;
+    Ok(s)
+}
+pub async fn is_exists(client: Client, key: &str) -> Result<bool> {
+    let mut conn = get_conn(client).await?;
+    conn.exists(key).await.map_err(AppError::from)?;
+    Ok(true)
+}
