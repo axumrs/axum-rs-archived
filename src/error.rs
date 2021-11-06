@@ -19,6 +19,7 @@ pub enum AppErrorType {
     IsExists,
     /// 模板
     Template,
+    AuthError,
     /// 通用错误
     Common,
 }
@@ -73,6 +74,9 @@ impl AppError {
             cause: Some(err.to_string()),
             error_type: AppErrorType::Template,
         }
+    }
+    pub fn auth_error(msg: &str) -> Self {
+        Self::from_str(msg, AppErrorType::AuthError)
     }
     fn status_code(&self) -> StatusCode {
         match self.error_type {

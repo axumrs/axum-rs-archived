@@ -6,7 +6,7 @@ use axum::{
 };
 use axum_rs::{
     config,
-    handler::{auth::admin_login, backend, frontend},
+    handler::{auth, backend, frontend},
     middleware::admin_auth::Auth,
     model::AppState,
 };
@@ -73,7 +73,8 @@ async fn main() {
         .route("/", get(frontend::index::index))
         .nest("/static", static_serve)
         .nest("/admin", backend_router)
-        .route("/login", get(admin_login))
+        .route("/login", get(auth::admin_login_ui).post(auth::admin_login))
+        .route("/logout", get(auth::admin_logout))
         .layer(TraceLayer::new_for_http())
         .layer(AddExtensionLayer::new(state));
     axum::Server::bind(&cfg.web.addr.parse().unwrap())

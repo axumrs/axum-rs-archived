@@ -13,9 +13,7 @@ pub fn redirect_with_cookie(
     let mut header = HeaderMap::new();
     header.insert(axum::http::header::LOCATION, url.parse().unwrap());
     if let Some(cookie) = cookie {
-        if !cookie.is_empty() {
-            header.insert(axum::http::header::SET_COOKIE, cookie.parse().unwrap());
-        }
+        header.insert(axum::http::header::SET_COOKIE, cookie.parse().unwrap());
     }
     Ok((StatusCode::FOUND, header, ()))
 }
