@@ -46,7 +46,8 @@ where
                     let redis_key = gen_redis_key(&sess_cfg, val);
                     let admin_session = rdb::get(client, &redis_key).await.map_err(|err| {
                         tracing::error!("{:?}", err);
-                        AppError::from(err)
+                        //AppError::from(err)
+                        AppError::auth_error("UNAUTHENTICATED")
                     })?;
                     let admin_session: AdminSession = serde_json::from_str(&admin_session).unwrap();
                     tracing::debug!("admin session: {}", admin_session.username);
