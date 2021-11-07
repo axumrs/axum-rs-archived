@@ -67,6 +67,9 @@ async fn main() {
             get(backend::topic::edit).post(backend::topic::edit_action),
         )
         .layer(extractor_middleware::<Auth>());
+    let frontend_router = Router::new()
+        .route("/", get(frontend::index::index))
+        .route("/subject", get(frontend::subject::index));
     let static_serve = service::get(ServeDir::new("static")).handle_error(|err| {
         Ok::<_, Infallible>((
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -75,7 +78,7 @@ async fn main() {
     });
 
     let app = Router::new()
-        .route("/", get(frontend::index::index))
+        .nest("/", frontend_router)
         .nest("/static", static_serve)
         .nest("/admin", backend_router)
         .route("/login", get(auth::admin_login_ui).post(auth::admin_login))
