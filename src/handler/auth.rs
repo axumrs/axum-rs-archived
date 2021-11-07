@@ -12,7 +12,8 @@ use crate::{
     form,
     html::auth::LoginTemplate,
     model::{AdminSession, AppState},
-    rdb, session,
+    rdb,
+    session::{self, gen_redis_key},
     time::now,
     Result,
 };
@@ -52,6 +53,31 @@ pub async fn admin_login(
     redirect_with_cookie("/admin", Some(&cookie))
 }
 
-pub async fn admin_logout() -> Result<(StatusCode, HeaderMap, ())> {
-    redirect_with_cookie("/admin/subject", Some("user="))
+pub async fn admin_logout(
+    Extension(state): Extension<Arc<AppState>>,
+    headers: HeaderMap,
+) -> Result<(StatusCode, HeaderMap, ())> {
+    let cfg = state.sess_cfg.clone();
+    let cookie = headers
+        .get(axum::http::header::COOKIE)
+        .and_then(|value| value.to_str().ok())
+        .map(|value| value.to_string());
+    if let Some(cookie) = cookie {
+        let cookie = cookie.as_str();
+        let cs: Vec<&str> = cookie.split(';').collect();
+        for item in cs {
+            let item: Vec<&str> = item.split('=').collect();
+            let key = item[0];
+            let val = item[1];
+            let key = key.trim();
+            let val = val.trim();
+            if key == &cfg.id_name && !val.is_empty() {
+                let client = state.rdc.clone();
+                let redis_key = gen_redis_key(&cfg, val);
+                rdb::del(client, &redis_key).await?;
+            }
+        }
+    }
+    let cookie_logout = format!("{}=", &cfg.id_name);
+    redirect_with_cookie("/login", Some(&cookie_logout))
 }

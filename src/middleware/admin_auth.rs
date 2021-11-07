@@ -45,7 +45,7 @@ where
                 if key == id_name && !val.is_empty() {
                     let redis_key = gen_redis_key(&sess_cfg, val);
                     let admin_session = rdb::get(client, &redis_key).await.map_err(|err| {
-                        tracing::error!("{:?}", err);
+                        tracing::error!("【rbd::get】{:?}", err);
                         //AppError::from(err)
                         AppError::auth_error("UNAUTHENTICATED")
                     })?;

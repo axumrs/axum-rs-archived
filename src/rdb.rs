@@ -15,11 +15,19 @@ pub async fn set(client: Client, key: &str, value: &str, sec: usize) -> Result<(
 }
 pub async fn get(client: Client, key: &str) -> Result<String> {
     let mut conn = get_conn(client).await?;
-    let s: String = conn.get(key).await.map_err(AppError::from)?;
+    //let s: String = conn.get(key).await.map_err(AppError::from)?;
+    let s: String = conn.get(key).await.map_err(|err| {
+        tracing::debug!("{:?}", err);
+        AppError::from(err)
+    })?;
     Ok(s)
 }
 pub async fn is_exists(client: Client, key: &str) -> Result<bool> {
     let mut conn = get_conn(client).await?;
     conn.exists(key).await.map_err(AppError::from)?;
     Ok(true)
+}
+pub async fn del(client: Client, key: &str) -> Result<()> {
+    let mut conn = get_conn(client).await?;
+    conn.del(key).await.map_err(AppError::from)
 }
