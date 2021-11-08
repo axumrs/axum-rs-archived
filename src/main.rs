@@ -69,7 +69,8 @@ async fn main() {
         .layer(extractor_middleware::<Auth>());
     let frontend_router = Router::new()
         .route("/", get(frontend::index::index))
-        .route("/subject", get(frontend::subject::index));
+        .route("/subject", get(frontend::subject::index))
+        .route("/subject/:slug", get(frontend::subject::topics));
     let static_serve = service::get(ServeDir::new("static")).handle_error(|err| {
         Ok::<_, Infallible>((
             StatusCode::INTERNAL_SERVER_ERROR,

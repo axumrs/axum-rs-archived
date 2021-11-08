@@ -118,3 +118,14 @@ pub struct AdminSession {
     pub username: String,
     pub dateline: i32,
 }
+
+#[derive(PostgresMapper)]
+#[pg_mapper(table = "v_subject_topic")]
+pub struct SubjectTopicWithTagsAndTopicSummary {
+    pub id: i64,
+    pub title: String,
+    pub slug: String,
+    pub subject_slug: String,
+    pub tag_names: Vec<String>,
+    pub summary: String,
+}

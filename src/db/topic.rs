@@ -1,7 +1,10 @@
 use crate::{
     error::AppError,
     form::{CreateTopic, UpdateTopic},
-    model::{TagID, TopicID, TopicSubjectListView, TopicWithMdAndTagsForEdit},
+    model::{
+        SubjectTopicWithTagsAndTopicSummary, TagID, TopicID, TopicSubjectListView,
+        TopicWithMdAndTagsForEdit,
+    },
     time::now,
     Result,
 };
@@ -163,6 +166,27 @@ pub async fn select(
         .build();
     let count_sql = SelectStmt::builder()
         .table("v_topic_subject_list")
+        .fields("COUNT(*)")
+        .condition(condition)
+        .build();
+    super::select(client, &sql, &count_sql, args, page).await
+}
+pub async fn select_with_summary(
+    client: &Client,
+    condition: Option<&str>,
+    args: &[&(dyn ToSql + Sync)],
+    page: u32,
+) -> Result<Pagination<Vec<SubjectTopicWithTagsAndTopicSummary>>> {
+    let sql = SelectStmt::builder()
+        .table("v_subject_topics")
+        .fields("id,title,slug,subject_slug,tag_names,summary")
+        .condition(condition)
+        .order(Some("id ASC"))
+        .limit(Some(PAGE_SIZE))
+        .offset(Some(page * PAGE_SIZE as u32))
+        .build();
+    let count_sql = SelectStmt::builder()
+        .table("v_subject_topics")
         .fields("COUNT(*)")
         .condition(condition)
         .build();

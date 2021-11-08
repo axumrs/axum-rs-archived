@@ -77,6 +77,25 @@ pub async fn select(
     let total_records = count(client, Some(condition), args).await?;
     Ok(Pagination::new(page, PAGE_SIZE, total_records, result))
 }
+pub async fn select_with_summary(
+    client: &Client,
+    condition: Option<&str>,
+    args: &[&(dyn ToSql + Sync)],
+    page: u32,
+) -> Result<Pagination<Vec<Subject>>> {
+    let sql = SelectStmt::builder()
+        .table(TABLE_NAME)
+        .fields("id, name, slug, is_del, summary")
+        .condition(condition)
+        .order(Some("id DESC"))
+        .limit(Some(PAGE_SIZE))
+        .offset(Some(page * PAGE_SIZE as u32))
+        .build();
+    tracing::debug!("{}", sql);
+    let result = query::<Subject>(client, &sql, args).await?;
+    let total_records = count(client, condition, args).await?;
+    Ok(Pagination::new(page, PAGE_SIZE, total_records, result))
+}
 
 /// 根据条件获取主题。返回主题，或包含[`AppError`]的错误信息
 ///
