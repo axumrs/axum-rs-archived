@@ -40,9 +40,15 @@ pub async fn topics(
     let tag = tag::find(&client, Some("name=$1 AND is_del=false"), &[&name])
         .await
         .map_err(log_error(handler_name.to_string()))?;
-    let list = topic::select_with_summary(&client, Some("$1 = ANY(tag_names)"), &[&name], page)
-        .await
-        .map_err(log_error(handler_name.to_string()))?;
+    let list = topic::select_with_summary(
+        &client,
+        Some("$1 = ANY(tag_names)"),
+        &[&name],
+        Some("id ASC"),
+        page,
+    )
+    .await
+    .map_err(log_error(handler_name.to_string()))?;
     let tmpl = TopicsTemplate {
         page,
         list,

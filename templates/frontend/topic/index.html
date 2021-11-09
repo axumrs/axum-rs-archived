@@ -1,0 +1,54 @@
+{% extends "../base.html" %}
+{%block title %}文章列表{%endblock%}
+{%block parent_title %}文章{%endblock%}
+{%block parent_url%}/topic{%endblock%}
+{%block content %}
+    {% for topic in list.data %} 
+        <div class="card card-outline subject-item">
+            <div class="card-body">
+                <h3 class="card-title"> <a href="/topic/{{topic.subject_slug}}/{{topic.slug}}">{{ topic.title }}</a> </h3>
+                <div class="card-text py-2 text-muted">
+                    {{ topic.summary }}
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <a href="/subject/{{topic.subject_slug}}" class="btn btn-outline-secondary btn-xs">
+                            <i class="fas fa-cube"></i>
+                            {{ topic.subject_name }}
+                        </a>
+                    </div>
+                    <div class="col">
+                        <div class="text-right text-sm">
+                            {% for tag in topic.tag_names %}
+                            <a class="badge  topic-tag" href="/tag/{{tag}}">{{tag}}</a>
+                            {% endfor %}
+                         </div>
+                    </div>
+                </div><!--/row-->
+            </div>
+        </div><!-- /.card -->
+    {% endfor %}
+{% if list.total_pages > 1 %}
+<div class="clearfix">
+    <ul class="pagination pagination-sm mb-3 float-right">
+        <li class="page-item"><a class="page-link" href="/topic">«</a></li>
+        {% for i in 0..list.total_pages %}
+        <li class="page-item"><a class="page-link" href="/topic?page={{ i }}">{{i+1}}</a></li>
+        {% endfor %}
+        <li class="page-item"><a class="page-link" href="/topic?page={{ list.total_pages -1 }}">»</a></li>
+    </ul>
+</div>
+{%endif%}
+{%endblock%}
+{%block js%}
+<script>
+    $(function(){
+            const cls = [ 'info', 'success', 'warning', 'danger'];
+            const clsLen = cls.length;
+            $('.topic-tag').each(function(idx, ele) {
+                    const clsName = `badge-${cls[idx%clsLen]}`;
+                    $(ele).addClass(clsName);
+                });
+        });
+</script>
+{%endblock%}

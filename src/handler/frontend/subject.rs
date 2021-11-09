@@ -47,7 +47,7 @@ pub async fn topics(
     let subj = subject::find(&client, Some("slug=$1 AND is_del=false"), &[&slug])
         .await
         .map_err(log_error(handler_name.to_string()))?;
-    let list = topic::select_with_summary(&client, None, &[], page)
+    let list = topic::select_with_summary(&client, None, &[], Some("id ASC"), page)
         .await
         .map_err(log_error(handler_name.to_string()))?;
     let tmpl = TopicsTemplate {

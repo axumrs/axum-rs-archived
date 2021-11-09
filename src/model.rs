@@ -1,3 +1,4 @@
+use chrono::NaiveDateTime;
 use redis::Client;
 use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
@@ -129,4 +130,27 @@ pub struct SubjectTopicWithTagsAndTopicSummary {
     pub tag_names: Vec<String>,
     pub summary: String,
     pub subject_name: String,
+}
+
+#[derive(PostgresMapper)]
+#[pg_mapper(table = "v_topic_detail")]
+pub struct TopicDetail {
+    pub id: i64,
+    pub subject_id: i32,
+    pub title: String,
+    pub slug: String,
+    pub author: String,
+    pub src: String,
+    pub html: String,
+    pub tag_names: Vec<String>,
+    pub subject_slug: String,
+    pub dateline: i32,
+    pub hit: i32,
+    pub subject_name: String,
+}
+impl TopicDetail {
+    pub fn dateline(&self) -> String {
+        let dt = NaiveDateTime::from_timestamp(self.dateline as i64, 0);
+        dt.format("%Y/%m/%d %H:%M:%S").to_string()
+    }
 }

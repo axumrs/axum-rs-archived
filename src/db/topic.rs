@@ -2,7 +2,7 @@ use crate::{
     error::AppError,
     form::{CreateTopic, UpdateTopic},
     model::{
-        SubjectTopicWithTagsAndTopicSummary, TagID, TopicID, TopicSubjectListView,
+        SubjectTopicWithTagsAndTopicSummary, TagID, TopicDetail, TopicID, TopicSubjectListView,
         TopicWithMdAndTagsForEdit,
     },
     time::now,
@@ -175,13 +175,14 @@ pub async fn select_with_summary(
     client: &Client,
     condition: Option<&str>,
     args: &[&(dyn ToSql + Sync)],
+    order: Option<&str>,
     page: u32,
 ) -> Result<Pagination<Vec<SubjectTopicWithTagsAndTopicSummary>>> {
     let sql = SelectStmt::builder()
         .table("v_subject_topics")
         .fields("id,title,slug,subject_slug,tag_names,summary,subject_name")
         .condition(condition)
-        .order(Some("id ASC"))
+        .order(order)
         .limit(Some(PAGE_SIZE))
         .offset(Some(page * PAGE_SIZE as u32))
         .build();
@@ -388,4 +389,46 @@ pub async fn update(client: &mut Client, ut: &UpdateTopic, html: &str) -> Result
     }
     tx.commit().await.map_err(AppError::from)?;
     Ok(true)
+}
+
+pub async fn detail(client: &mut Client, subject_slug: &str, slug: &str) -> Result<TopicDetail> {
+    let tx = client.transaction().await.map_err(AppError::from)?;
+    let stmt = match tx.prepare("SELECT id,title,subject_id,slug,author,src,html,tag_names,subject_slug,dateline,hit,subject_name FROM v_topic_detail WHERE subject_slug=$1 AND slug=$2").await {
+        Ok(s) => s,
+        Err(err) => {
+            tx.rollback().await.map_err(AppError::from)?;
+            return Err(AppError::from(err));
+        }
+    };
+    let result = tx
+        .query(&stmt, &[&subject_slug, &slug])
+        .await
+        .map_err(AppError::from)?
+        .iter()
+        .map(|row| TopicDetail::from_row_ref(row).unwrap())
+        .collect::<Vec<TopicDetail>>()
+        .pop();
+    let result = match result {
+        Some(r) => r,
+        None => {
+            tx.rollback().await.map_err(AppError::from)?;
+            return Err(AppError::not_found("不存在的文章"));
+        }
+    };
+    let stmt = match tx.prepare("UPDATE topic SET hit=hit+1 WHERE id=$1").await {
+        Ok(s) => s,
+        Err(err) => {
+            tx.rollback().await.map_err(AppError::from)?;
+            return Err(AppError::from(err));
+        }
+    };
+    match tx.execute(&stmt, &[&result.id]).await {
+        Err(err) => {
+            tx.rollback().await.map_err(AppError::from)?;
+            return Err(AppError::from(err));
+        }
+        _ => {}
+    };
+    tx.commit().await.map_err(AppError::from)?;
+    Ok(result)
 }

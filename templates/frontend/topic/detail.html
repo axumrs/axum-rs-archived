@@ -1,0 +1,77 @@
+{% extends "../base.html" %}
+{%block title %} {{ topic.title }} {%endblock%}
+{%block parent_title %}{{topic.subject_name}}{%endblock%}
+{%block parent_url%}/subject/{{topic.subject_slug}}{%endblock%}
+{%block content %}
+    <div class="card">
+        <div class="card-header">
+            <div class="text-muted text-sm">
+                浏览：{{ topic.hit + 1 }} 时间：{{ topic.dateline() }} 作者：{{ topic.author }} 来源：{{ topic.src }}
+            </div>
+        </div>
+        <div class="card-body" style="min-height:30em">
+            {{ topic.html|safe }} 
+        </div>
+        <div class="card-footer">
+            <div class="row">
+                <div class="col">
+                    <a href="/subject/{{topic.subject_slug}}" class="btn btn-outline-secondary btn-xs">
+                        <i class="fas fa-cube"></i>
+                        {{ topic.subject_name }}
+                    </a>
+                </div>
+                <div class="col">
+                    <div class="text-right text-sm">
+                        {% for tag in topic.tag_names %}
+                        <a class="badge  topic-tag" href="/tag/{{tag}}">{{tag}}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{%endblock%}
+{% block css%}
+    <link rel="stylesheet" href="/static/highlight.js/default.min.css" />
+<style>
+/* for block of numbers */
+.hljs-ln-numbers {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    text-align: center;
+    color: #ccc;
+    border-right: 1px solid #CCC;
+    vertical-align: top;
+    padding-right: 5px;
+
+    /* your custom style here */
+}
+
+/* for block of code */
+.hljs-ln-code {
+    padding-left: 15px;
+}
+
+</style>
+{%endblock%}
+{%block js%}
+<script src="/static/highlight.js/highlight.min.js"></script>
+<script src="/static/highlight.js/highlightjs-line-numbers.min.js"></script>
+<script>
+    $(function(){
+            const cls = [ 'info', 'success', 'warning', 'danger'];
+            const clsLen = cls.length;
+            $('.topic-tag').each(function(idx, ele) {
+                    const clsName = `badge-${cls[idx%clsLen]}`;
+                    $(ele).addClass(clsName);
+                });
+        });
+    hljs.highlightAll();
+    hljs.initLineNumbersOnLoad();
+</script>
+{%endblock%}
