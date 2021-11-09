@@ -87,3 +87,13 @@ pub async fn update(client: &Client, ut: &UpdateTag) -> Result<u64> {
     let sql = "UPDATE tag SET name =$1 WHERE id=$2";
     execute(client, sql, &[&ut.name, &ut.id]).await
 }
+pub async fn all(client: &Client) -> Result<Vec<Tag>> {
+    let sql = SelectStmt::builder()
+        .table("tag")
+        .fields("id,name,is_del")
+        .condition(Some("is_del=false"))
+        .limit(Some(u8::MAX))
+        .order(Some("id ASC"))
+        .build();
+    super::query(client, &sql, &[]).await
+}

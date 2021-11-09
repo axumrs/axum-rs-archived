@@ -128,4 +128,5 @@ pub struct SubjectTopicWithTagsAndTopicSummary {
     pub subject_slug: String,
     pub tag_names: Vec<String>,
     pub summary: String,
+    pub subject_name: String,
 }

@@ -30,3 +30,4 @@ chrono = "0.4"
 redis = { version = "0.21", features = ["tokio-comp", "aio"] }
 bcrypt = "0.10"
 uuid =  {  version = "0.8", features = ["v4", "serde"]}
+urlencoding = "2.1"

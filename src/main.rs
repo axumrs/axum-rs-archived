@@ -70,7 +70,9 @@ async fn main() {
     let frontend_router = Router::new()
         .route("/", get(frontend::index::index))
         .route("/subject", get(frontend::subject::index))
-        .route("/subject/:slug", get(frontend::subject::topics));
+        .route("/subject/:slug", get(frontend::subject::topics))
+        .route("/tag", get(frontend::tag::index))
+        .route("/tag/:name", get(frontend::tag::topics));
     let static_serve = service::get(ServeDir::new("static")).handle_error(|err| {
         Ok::<_, Infallible>((
             StatusCode::INTERNAL_SERVER_ERROR,

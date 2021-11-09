@@ -179,7 +179,7 @@ pub async fn select_with_summary(
 ) -> Result<Pagination<Vec<SubjectTopicWithTagsAndTopicSummary>>> {
     let sql = SelectStmt::builder()
         .table("v_subject_topics")
-        .fields("id,title,slug,subject_slug,tag_names,summary")
+        .fields("id,title,slug,subject_slug,tag_names,summary,subject_name")
         .condition(condition)
         .order(Some("id ASC"))
         .limit(Some(PAGE_SIZE))

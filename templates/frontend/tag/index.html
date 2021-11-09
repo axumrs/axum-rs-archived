@@ -1,0 +1,23 @@
+{% extends "../base.html" %}
+{%block title %}标签列表{%endblock%}
+{%block parent_title %}标签{%endblock%}
+{%block parent_url%}/tag{%endblock%}
+{%block content %}
+
+{% for tag in tags %}
+<a href="/tag/{{tag.name}}" class="btn tag-item">{{tag.name}}</a>
+{%endfor%}
+
+{%endblock%}
+{%block js%}
+<script>
+    $(function(){
+            const cls = ['primary', 'secondary' ,'success',  'danger', 'info', 'dark'];
+            const clsLen = cls.length;
+            $('.tag-item').each(function(idx, ele) {
+                    const clsName = `btn-outline-${cls[idx%clsLen]}`;
+                    $(ele).addClass(clsName);
+                });
+        });
+</script>
+{%endblock%}
