@@ -51,4 +51,5 @@ pub struct UpdateTopic {
 pub struct AdminLogin {
     pub username: String,
     pub password: String,
+    pub hcaptcha_response: String,
 }

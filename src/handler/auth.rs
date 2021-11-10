@@ -9,7 +9,7 @@ use serde_json::json;
 
 use crate::{
     error::AppError,
-    form,
+    form, hcaptcha,
     html::auth::LoginTemplate,
     model::{AdminSession, AppState},
     rdb,
@@ -20,15 +20,24 @@ use crate::{
 
 use super::{helper::render, redirect::redirect_with_cookie};
 
-pub async fn admin_login_ui() -> Result<Html<String>> {
+pub async fn admin_login_ui(Extension(state): Extension<Arc<AppState>>) -> Result<Html<String>> {
     let handler_name = "admin_login_ui";
-    let tmpl = LoginTemplate {};
+    let site_key = state.hcap_cfg.site_key.clone();
+    let tmpl = LoginTemplate { site_key };
     render(tmpl, handler_name)
 }
 pub async fn admin_login(
     Extension(state): Extension<Arc<AppState>>,
     Form(login): Form<form::AdminLogin>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
+    let is_valid = hcaptcha::verify(
+        login.hcaptcha_response.clone(),
+        state.hcap_cfg.secret_key.clone(),
+    )
+    .await?;
+    if !is_valid {
+        return Err(AppError::auth_error("人机验证失败"));
+    }
     if &login.username != "foo" || &login.password != "bar" {
         return Err(AppError::auth_error("用户名或密码错误"));
     }

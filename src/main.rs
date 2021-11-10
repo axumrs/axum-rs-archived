@@ -30,6 +30,7 @@ async fn main() {
         pool,
         rdc,
         sess_cfg: cfg.session,
+        hcap_cfg: cfg.hcaptcha,
     });
 
     let backend_router = Router::new()

@@ -21,6 +21,11 @@ pub struct SessionConfig {
     pub id_name: String,
     pub expired: usize,
 }
+#[derive(Deserialize, Clone)]
+pub struct HCaptchaConfig {
+    pub site_key: String,
+    pub secret_key:String,
+}
 
 /// 配置
 #[derive(Deserialize)]
@@ -31,6 +36,7 @@ pub struct Config {
     pub pg: deadpool_postgres::Config,
     pub redis: RedisConfig,
     pub session: SessionConfig,
+    pub hcaptcha: HCaptchaConfig,
 }
 
 impl Config {

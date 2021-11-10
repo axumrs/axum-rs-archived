@@ -21,6 +21,7 @@ pub enum AppErrorType {
     Template,
     AuthError,
     RedisError,
+    HttpError,
     /// 通用错误
     Common,
 }

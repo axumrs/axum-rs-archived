@@ -4,6 +4,7 @@ pub mod db;
 pub mod error;
 pub mod form;
 pub mod handler;
+pub mod hcaptcha;
 pub mod html;
 pub mod md;
 pub mod middleware;

@@ -28,7 +28,12 @@
         <div class="card-body">
           <p class="login-box-msg">AXUM.RS后台管理</p>
 
-          <form action="/login" method="post">
+          <form action="/login" method="post" id="frmLogin">
+            <input
+              type="hidden"
+              name="hcaptcha_response"
+              id="hcaptcha_response"
+            />
             <div class="input-group mb-3">
               <input
                 type="text"
@@ -59,6 +64,7 @@
                 </div>
               </div>
             </div>
+            <div class="h-captcha" data-sitekey="{{ site_key }}"></div>
             <div class="row">
               <!-- /.col -->
               <div class="col-4 offset-8">
@@ -79,8 +85,21 @@
     <!-- jQuery -->
     <script src="/static/adminlte/plugins/jquery/jquery.min.js"></script>
     <!-- Bootstrap 4 -->
-    <script src="/static/adminlte/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
     <!-- AdminLTE App -->
     <script src="/static/adminlte/dist/js/adminlte.min.js"></script>
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+    <script>
+      $(function () {
+        $("#frmLogin").submit(function () {
+          let response = $("[name=h-captcha-response]").val();
+          if (!response) {
+            alert("请完成人机验证");
+            return false;
+          }
+          $("#hcaptcha_response").val(response);
+        });
+      });
+    </script>
   </body>
 </html>
