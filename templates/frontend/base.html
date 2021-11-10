@@ -1,19 +1,39 @@
 <!DOCTYPE html>
-<!--
-This is a starter template page. Use this page to start your new project from
-scratch. This page gets rid of all links and provides the needed markup only.
--->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{%block title%}{%endblock%} - AXUM中文网</title>
-
-    <!-- Google Font: Source Sans Pro -->
-    <!--<link-->
-    <!--rel="stylesheet"-->
-    <!--href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback"-->
-    <!--/>-->
+    <meta
+      name="description"
+      content="{%block title %}{%endblock%}{%block parent_title%}{%endblock%}AXUM中文网为你提供了企业级axum Web开发中所需要的大部分知识。从基础知识到企业级项目的开发，都有完整的系列教程。更难得的是，除了文字教程，我们还录制了配套的视频教程，方便你以多种形式进行学习。 "
+    />
+    <meta name="author" content="axum.rs (team@axum.rs)" />
+    <meta
+      name="keyword"
+      content="{%block title %}{%endblock%},{%block parent_title%}{%endblock%},axum,企业开发,教程,视频教程,axum.rs"
+    />
+    <link rel="icon" href="/static/img/logo.svg" type="image/svg+xml" />
+    <link rel="alternate icon" href="/static/img" type="image/png" />
+    <meta
+      property="og:title"
+      content="AXUM中文网 - 带你使用 axum 构建企业应用 - axum.rs"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/static/img/logo.png" />
+    <meta property="og:url" content="https://axum.rs/" />
+    <meta
+      property="og:description"
+      content="{%block title%}{%endblock%}AXUM中文网为你提供了企业级axum Web开发中所需要的大部分知识。从基础知识到企业级项目的开发，都有完整的系列教程。更难得的是，除了文字教程，我们还录制了配套的视频教程，方便你以多种形式进行学习。"
+    />
+    <meta property="og:site_name" content="AXUM中文网" />
+    <title>
+      {%block title%}{%endblock%} - {%block parent_title%}{%endblock%} -
+      AXUM中文网
+    </title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.font.im/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback"
+    />
     <!-- Font Awesome Icons -->
     <link
       rel="stylesheet"
@@ -32,7 +52,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
         <div class="container">
           <a href="/" class="navbar-brand">
             <img
-              src="/static/adminlte/dist/img/AdminLTELogo.png"
+              src="/static/img/logo.svg"
               alt="AdminLTE Logo"
               class="brand-image img-circle elevation-3"
               style="opacity: 0.8"
@@ -65,6 +85,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
               </li>
               <li class="nav-item">
                 <a href="/subject" class="nav-link">专题</a>
+              </li>
+              <li class="nav-item">
+                <a href="/topic" class="nav-link">文章</a>
+              </li>
+              <li class="nav-item">
+                <a href="/tag" class="nav-link">标签</a>
               </li>
               <li class="nav-item">
                 <a href="/about" class="nav-link">关于</a>
@@ -139,6 +165,18 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <script src="/static/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
     <!-- AdminLTE App -->
     <script src="/static/adminlte/dist/js/adminlte.min.js"></script>
+        <script>
+            $(function(){
+                let url = location.pathname;
+                $('.navbar-nav > .nav-item').each(function(){
+                   let item =  $(this).find('a');
+                    if(item.attr('href') === url) {
+                        item.addClass('active');
+                        return;
+                    }
+                });
+            });
+        </script>
     {%block js%}{%endblock %}
   </body>
 </html>
