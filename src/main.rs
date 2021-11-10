@@ -74,7 +74,8 @@ async fn main() {
         .route("/tag", get(frontend::tag::index))
         .route("/tag/:name", get(frontend::tag::topics))
         .route("/topic", get(frontend::topic::index))
-        .route("/topic/:subject_slug/:slug", get(frontend::topic::detail));
+        .route("/topic/:subject_slug/:slug", get(frontend::topic::detail))
+        .route("/about", get(frontend::about::index));
     let static_serve = service::get(ServeDir::new("static")).handle_error(|err| {
         Ok::<_, Infallible>((
             StatusCode::INTERNAL_SERVER_ERROR,
