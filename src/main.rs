@@ -33,6 +33,7 @@ async fn main() {
     });
 
     let backend_router = Router::new()
+        .route("/", get(backend::index::index))
         .route("/subject", get(backend::subject::index))
         .route(
             "/subject/add",
