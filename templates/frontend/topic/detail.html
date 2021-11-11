@@ -33,35 +33,9 @@
 {%endblock%}
 {% block css%}
     <link rel="stylesheet" href="/static/highlight.js/default.min.css" />
-<style>
-/* for block of numbers */
-.hljs-ln-numbers {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
-    text-align: center;
-    color: #ccc;
-    border-right: 1px solid #CCC;
-    vertical-align: top;
-    padding-right: 5px;
-
-    /* your custom style here */
-}
-
-/* for block of code */
-.hljs-ln-code {
-    padding-left: 10px;
-}
-
-</style>
 {%endblock%}
 {%block js%}
 <script src="/static/highlight.js/highlight.min.js"></script>
-<script src="/static/highlight.js/highlightjs-line-numbers.min.js"></script>
 <script>
     $(function(){
             const cls = [ 'info', 'success', 'warning', 'danger'];
@@ -72,6 +46,27 @@
                 });
         });
     hljs.highlightAll();
-    hljs.initLineNumbersOnLoad();
 </script>
+<script>
+    {% for uuid in uuids %}
+    function get_procted_content_{{uuid}}(response) {
+        get_procted_content('{{uuid}}', response);
+    }
+    {%endfor%}
+    function get_procted_content(id, response) {
+        $.post('/topic/get_procted_content', {id: id, hcaptcha_response: response}, function(data) {
+            if(data && data.tag && data.content) {
+                let item =  $('#hcaptcha-' + id);
+                let html = `<${data.tag} id="procted_content_${id}">${data.content}</${data.tag}>`;
+                item.after(html);
+                item.remove();
+                if (data.tag === 'pre'){
+                    hljs.highlightElement($(`#procted_content_${id}`)[0]);
+
+                }
+            }
+        });
+    }
+</script>
+<script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 {%endblock%}

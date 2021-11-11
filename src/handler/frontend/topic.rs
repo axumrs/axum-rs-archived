@@ -1,17 +1,22 @@
 use std::sync::Arc;
 
 use axum::{
-    extract::{Extension, Path, Query},
+    extract::{Extension, Form, Path, Query},
     response::Html,
+    Json,
 };
 use serde::Deserialize;
+use serde_json::from_str;
 
 use crate::{
     db::topic,
-    handler::helper::{get_client, log_error, protected_content, render},
+    error::AppError,
+    form,
+    handler::helper::{get_client, log_error, protected_content, render, ProtectedContent},
+    hcaptcha,
     html::frontend::topic::{DetailTemplate, IndexTemplate},
     model::AppState,
-    Result,
+    rdb, Result,
 };
 
 use super::PaginationArgs;
@@ -46,12 +51,42 @@ pub async fn detail(
     let TopicArgs { subject_slug, slug } = arg;
     tracing::debug!("subject_slug: {:?}, slug: {:?}", subject_slug, slug);
     let handler_name = "frontend_topics_detail";
-    let mut client = get_client(state, handler_name).await?;
+    let mut client = get_client(state.clone(), handler_name).await?;
     let mut result = topic::detail(&mut client, &subject_slug, &slug)
         .await
         .map_err(log_error(handler_name.to_string()))?;
-    let p_html = protected_content(&result.html, 2);
+    let site_key = state.clone().hcap_cfg.site_key.clone();
+    let (p_html, uuids) = protected_content(&result.html, state.rdc.clone(), &site_key).await;
     result.html = p_html;
-    let tmpl = DetailTemplate { topic: result };
+    let tmpl = DetailTemplate {
+        topic: result,
+        uuids,
+    };
     render(tmpl, handler_name)
+}
+
+pub async fn get_procted_content(
+    Extension(state): Extension<Arc<AppState>>,
+    Form(frm): Form<form::GetProctedContent>,
+) -> Result<Json<ProtectedContent>> {
+    let handler_name = "frontend_topics_get_procted_content";
+    let is_valid = hcaptcha::verify(
+        frm.hcaptcha_response,
+        state.clone().hcap_cfg.secret_key.clone(),
+    )
+    .await
+    .map_err(log_error(handler_name.to_string()))?;
+    if !is_valid {
+        return Err(AppError::from_str(
+            "人机验证失败",
+            crate::error::AppErrorType::Common,
+        ));
+    };
+    let client = state.rdc.clone();
+    let redis_key = format!("protected_content:{}", &frm.id);
+    let s = rdb::get(client, &redis_key)
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    let r: ProtectedContent = from_str(&s).unwrap();
+    Ok(Json(r))
 }

@@ -1,8 +1,10 @@
 use std::{convert::Infallible, sync::Arc};
 
 use axum::{
-    extract::extractor_middleware, handler::get, http::StatusCode, service, AddExtensionLayer,
-    Router,
+    extract::extractor_middleware,
+    handler::{get, post},
+    http::StatusCode,
+    service, AddExtensionLayer, Router,
 };
 use axum_rs::{
     config,
@@ -77,6 +79,10 @@ async fn main() {
         .route("/tag/:name", get(frontend::tag::topics))
         .route("/topic", get(frontend::topic::index))
         .route("/topic/:subject_slug/:slug", get(frontend::topic::detail))
+        .route(
+            "/topic/get_procted_content",
+            post(frontend::topic::get_procted_content),
+        )
         .route("/about", get(frontend::about::index));
     let static_serve = service::get(ServeDir::new("static")).handle_error(|err| {
         Ok::<_, Infallible>((

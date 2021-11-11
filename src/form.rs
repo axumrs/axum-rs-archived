@@ -53,3 +53,8 @@ pub struct AdminLogin {
     pub password: String,
     pub hcaptcha_response: String,
 }
+#[derive(Deserialize)]
+pub struct GetProctedContent {
+    pub id: String,
+    pub hcaptcha_response: String,
+}

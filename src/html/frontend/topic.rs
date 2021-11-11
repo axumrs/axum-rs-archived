@@ -15,4 +15,5 @@ pub struct IndexTemplate {
 #[template(path = "frontend/topic/detail.html")]
 pub struct DetailTemplate {
     pub topic: TopicDetail,
+    pub uuids: Vec<String>,
 }
