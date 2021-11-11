@@ -8,7 +8,7 @@ use serde::Deserialize;
 
 use crate::{
     db::topic,
-    handler::helper::{get_client, log_error, render},
+    handler::helper::{get_client, log_error, protected_content, render},
     html::frontend::topic::{DetailTemplate, IndexTemplate},
     model::AppState,
     Result,
@@ -47,9 +47,11 @@ pub async fn detail(
     tracing::debug!("subject_slug: {:?}, slug: {:?}", subject_slug, slug);
     let handler_name = "frontend_topics_detail";
     let mut client = get_client(state, handler_name).await?;
-    let result = topic::detail(&mut client, &subject_slug, &slug)
+    let mut result = topic::detail(&mut client, &subject_slug, &slug)
         .await
         .map_err(log_error(handler_name.to_string()))?;
+    let p_html = protected_content(&result.html, 2);
+    result.html = p_html;
     let tmpl = DetailTemplate { topic: result };
     render(tmpl, handler_name)
 }
