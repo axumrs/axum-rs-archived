@@ -2,11 +2,14 @@
 
 use std::convert::Infallible;
 
+use askama::Template;
 use axum::{
     body::{Bytes, Full},
     http::{Response, StatusCode},
-    response::IntoResponse,
+    response::{Html, IntoResponse},
 };
+
+use crate::html::err::ErrTemplate;
 
 /// 应用错误类型
 #[derive(Debug)]
@@ -146,6 +149,10 @@ impl IntoResponse for AppError {
             } => "模板渲染出错".to_string(),
             _ => "发生错误".to_string(),
         };
-        (status_code, msg).into_response()
+        let tmpl = ErrTemplate {
+            err: msg.to_string(),
+        };
+        let msg = tmpl.render().unwrap_or(msg.to_string());
+        (status_code, Html(msg)).into_response()
     }
 }
