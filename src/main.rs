@@ -1,3 +1,4 @@
+#![recursion_limit = "256"]
 use std::{convert::Infallible, sync::Arc};
 
 use axum::{

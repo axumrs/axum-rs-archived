@@ -103,7 +103,7 @@ pub async fn edit_action(
             crate::error::AppErrorType::Common,
         ));
     }
-    let admin_session = get_logined_admin(&state, &headers).await?;
+    let admin_session = get_logined_admin(state.clone(), &headers).await?;
     if admin_session.is_none() {
         return Err(AppError::auth_error("UNAUTHENTICATED"));
     }

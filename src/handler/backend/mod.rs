@@ -19,7 +19,7 @@ pub mod tag;
 pub mod topic;
 
 pub async fn get_logined_admin(
-    state: &Arc<AppState>,
+    state: Arc<AppState>,
     headers: &HeaderMap,
 ) -> Result<Option<AdminSession>> {
     let sess_cfg = state.clone().sess_cfg.clone();
