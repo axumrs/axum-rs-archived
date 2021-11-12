@@ -1,0 +1,21 @@
+{% extends "../base.html" %} 
+{% block parent_title %}账号管理 {% endblock %} 
+{% block parent_url %}admin{% endblock %}
+{% block title %}添加账号{% endblock %}
+{% block content %}
+<form action="/admin/admin/add" method="post">
+    <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" class="form-control" id="username" name="username" placeholder="用户名" required>
+    </div>
+    <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" class="form-control" id="password" name="password" placeholder="密码" required>
+    </div>
+    <div class="form-group">
+        <label for="re_password">重复密码</label>
+        <input type="password" class="form-control" id="re_password" name="re_password" placeholder="重复密码" required>
+    </div>
+    <button type="submit" class="btn btn-primary">提交</button>
+</form>
+{% endblock %}

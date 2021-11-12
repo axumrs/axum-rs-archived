@@ -70,6 +70,17 @@ async fn main() {
             "/topic/edit/:id",
             get(backend::topic::edit).post(backend::topic::edit_action),
         )
+        .route("/admin", get(backend::admin::index))
+        .route(
+            "/admin/add",
+            get(backend::admin::add).post(backend::admin::add_action),
+        )
+        .route(
+            "/admin/edit/:id",
+            get(backend::admin::edit).post(backend::admin::edit_action),
+        )
+        .route("/admin/del/:id", get(backend::admin::del))
+        .route("/admin/restore/:id", get(backend::admin::restore))
         .layer(extractor_middleware::<Auth>());
     let frontend_router = Router::new()
         .route("/", get(frontend::index::index))

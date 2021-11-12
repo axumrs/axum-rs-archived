@@ -46,6 +46,15 @@ CREATE TABLE topic_tag (
     is_del BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY(topic_id,tag_id)
 );
+CREATE TABLE admin (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    is_sys BOOLEAN NOT NULL DEFAULT FALSE,
+    is_del BOOLEAN NOT NULL DEFAULT FALSE,
+    UNIQUE(username)
+);
+INSERT INTO admin(username, password, is_sys, is_del) VALUES('axum.rs', '$2b$12$2pj99oeu02s/Ar9MT.oto.PSn0rCVW6p/Me8f7CFc5d0KD9q1FvsG', true, false);
 
 -- 视图
 -- 用于列表显示的文章和主题

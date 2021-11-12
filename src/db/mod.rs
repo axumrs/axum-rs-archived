@@ -6,6 +6,7 @@ use tokio_pg_mapper::FromTokioPostgresRow;
 
 use self::pagination::Pagination;
 
+pub mod admin;
 pub mod pagination;
 pub mod select_stmt;
 pub mod subject;

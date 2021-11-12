@@ -58,3 +58,26 @@ pub struct GetProctedContent {
     pub id: String,
     pub hcaptcha_response: String,
 }
+
+#[derive(Deserialize)]
+pub struct CreateAdmin {
+    pub username: String,
+    pub password: String,
+    pub re_password: String,
+}
+#[derive(Deserialize)]
+pub struct UpdateAdmin {
+    pub id: i32,
+    pub username: String,
+    pub password: String,
+    pub new_password: String,
+    pub re_password: String,
+}
+#[derive(Deserialize)]
+pub struct ChangeAdminPassword {
+    pub id: i32,
+    pub username: String,
+    pub password: String,
+    pub new_password: String,
+    pub re_password: String,
+}

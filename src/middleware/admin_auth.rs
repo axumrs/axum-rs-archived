@@ -3,15 +3,9 @@ use std::sync::Arc;
 use axum::{
     async_trait,
     extract::{FromRequest, RequestParts},
-    http,
 };
 
-use crate::{
-    error::AppError,
-    model::{AdminSession, AppState},
-    rdb,
-    session::gen_redis_key,
-};
+use crate::{error::AppError, handler::backend::get_logined_admin, model::AppState};
 
 pub struct Auth {}
 #[async_trait]
@@ -21,39 +15,11 @@ where
 {
     type Rejection = AppError;
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        let cookie = req
-            .headers()
-            .unwrap()
-            .get(http::header::COOKIE)
-            .and_then(|value| value.to_str().ok())
-            .map(|value| value.to_string());
-        tracing::debug!(" {} cookie: {:?}", req.uri(), cookie);
         let state = req.extensions().unwrap().get::<Arc<AppState>>().unwrap();
-        let client = state.rdc.clone();
-        let sess_cfg = state.sess_cfg.clone();
-        let id_name = sess_cfg.id_name.clone();
-
-        if let Some(cookie) = cookie {
-            let cookie = cookie.as_str();
-            let cs: Vec<&str> = cookie.split(';').collect();
-            for item in cs {
-                let item: Vec<&str> = item.split('=').collect();
-                let key = item[0];
-                let val = item[1];
-                let key = key.trim();
-                let val = val.trim();
-                if key == id_name && !val.is_empty() {
-                    let redis_key = gen_redis_key(&sess_cfg, val);
-                    let admin_session = rdb::get(client, &redis_key).await.map_err(|err| {
-                        tracing::error!("【rbd::get】{:?}", err);
-                        //AppError::from(err)
-                        AppError::auth_error("UNAUTHENTICATED")
-                    })?;
-                    let admin_session: AdminSession = serde_json::from_str(&admin_session).unwrap();
-                    tracing::debug!("admin session: {}", admin_session.username);
-                    return Ok(Self {});
-                }
-            }
+        let headers = req.headers().unwrap();
+        let admin_session = get_logined_admin(state, headers).await?;
+        if let Some(_) = admin_session {
+            return Ok(Self {});
         }
         Err(AppError::auth_error("UNAUTHENTICATED"))
     }

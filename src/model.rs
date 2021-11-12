@@ -115,9 +115,12 @@ impl TopicWithMdAndTagsForEdit {
         self.tag_names.join(",").to_string()
     }
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct AdminSession {
+    pub id: i32,
     pub username: String,
+    pub password: String,
+    pub is_sys: bool,
     pub dateline: i32,
 }
 
@@ -154,4 +157,19 @@ impl TopicDetail {
         let dt = NaiveDateTime::from_timestamp(self.dateline as i64, 0);
         dt.format("%Y/%m/%d %H:%M:%S").to_string()
     }
+}
+
+#[derive(PostgresMapper)]
+#[pg_mapper(table = "admin")]
+pub struct Admin {
+    pub id: i32,
+    pub username: String,
+    pub password: String,
+    pub is_sys: bool,
+    pub is_del: bool,
+}
+#[derive(PostgresMapper)]
+#[pg_mapper(table = "admin")]
+pub struct AdminID {
+    pub id: i32,
 }

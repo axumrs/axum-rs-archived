@@ -8,11 +8,14 @@ use axum::{
 use serde_json::json;
 
 use crate::{
+    db::admin,
     error::AppError,
-    form, hcaptcha,
+    form,
+    handler::helper::{get_client, get_cookie, log_error},
+    hcaptcha,
     html::auth::LoginTemplate,
     model::{AdminSession, AppState},
-    rdb,
+    password, rdb,
     session::{self, gen_redis_key},
     time::now,
     Result,
@@ -30,6 +33,7 @@ pub async fn admin_login(
     Extension(state): Extension<Arc<AppState>>,
     Form(login): Form<form::AdminLogin>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
+    let handler_name = "auth_login";
     let is_valid = hcaptcha::verify(
         login.hcaptcha_response.clone(),
         state.hcap_cfg.secret_key.clone(),
@@ -38,16 +42,24 @@ pub async fn admin_login(
     if !is_valid {
         return Err(AppError::auth_error("人机验证失败"));
     }
-    if &login.username != "foo" || &login.password != "bar" {
+    let client = get_client(state.clone(), handler_name).await?;
+    let login_admin = admin::find(&client, &login.username)
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
+    tracing::debug!("{:?}", password::hash(&login.password));
+    if !password::verify(&login.password, &login_admin.password)? {
         return Err(AppError::auth_error("用户名或密码错误"));
     }
+    let cfg = state.sess_cfg.clone();
     let data = json!(AdminSession {
-        username: login.username,
-        dateline: now(),
+        id: login_admin.id,
+        username: login_admin.username,
+        dateline: now() + cfg.expired as i32,
+        password: login_admin.password,
+        is_sys: login_admin.is_sys,
     });
     let data = data.to_string();
     tracing::debug!("data: {:?}", data);
-    let cfg = state.sess_cfg.clone();
     let session::GeneratedKey {
         id,
         cookie_key,
@@ -67,25 +79,11 @@ pub async fn admin_logout(
     headers: HeaderMap,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let cfg = state.sess_cfg.clone();
-    let cookie = headers
-        .get(axum::http::header::COOKIE)
-        .and_then(|value| value.to_str().ok())
-        .map(|value| value.to_string());
-    if let Some(cookie) = cookie {
-        let cookie = cookie.as_str();
-        let cs: Vec<&str> = cookie.split(';').collect();
-        for item in cs {
-            let item: Vec<&str> = item.split('=').collect();
-            let key = item[0];
-            let val = item[1];
-            let key = key.trim();
-            let val = val.trim();
-            if key == &cfg.id_name && !val.is_empty() {
-                let client = state.rdc.clone();
-                let redis_key = gen_redis_key(&cfg, val);
-                rdb::del(client, &redis_key).await?;
-            }
-        }
+    let cookie = get_cookie(&headers, &cfg.id_name);
+    if let Some(val) = cookie {
+        let client = state.rdc.clone();
+        let redis_key = gen_redis_key(&cfg, &val);
+        rdb::del(client, &redis_key).await?;
     }
     let cookie_logout = format!("{}=", &cfg.id_name);
     redirect_with_cookie("/login", Some(&cookie_logout))
