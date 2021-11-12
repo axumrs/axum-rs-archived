@@ -41,7 +41,7 @@ pub async fn create(client: &mut Client, ct: &CreateTopic, html: &str) -> Result
         return Err(AppError::is_exists("相同专题、相同固定链接的文章已存在"));
     }
 
-    let stmt = tx.prepare("INSERT INTO topic (title, subject_id, slug, summary, author,  dateline, src) VALUES ($1, $2, $3, $4, $5, $6 ) RETURNING id").await;
+    let stmt = tx.prepare("INSERT INTO topic (title, subject_id, slug, summary, author,  dateline, src) VALUES ($1, $2, $3, $4, $5, $6,$7 ) RETURNING id").await;
     let stmt = match stmt {
         Ok(s) => s,
         Err(err) => {
