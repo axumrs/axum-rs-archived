@@ -1,6 +1,12 @@
 <div class="card-footer clearfix">
   <ul class="pagination pagination-sm m-0 float-right">
-    <li class="page-item"><a class="page-link" href="#">«</a></li>
+    <li class="page-item">
+      <a
+        class="page-link"
+        href="?keyword={{ arg.keyword() }}&is_del={{ arg.is_del() }}"
+        >«</a
+      >
+    </li>
     {% for i in 0..list.total_pages %}
     <li class="page-item">
       <a
@@ -12,6 +18,14 @@
       >
     </li>
     {% endfor %}
-    <li class="page-item"><a class="page-link" href="#">»</a></li>
+    <li class="page-item">
+      <a
+        class="page-link"
+        href="?page={{ list.total_pages - 1 }}&keyword={{
+          arg.keyword()
+        }}&is_del={{ arg.is_del() }}"
+        >»</a
+      >
+    </li>
   </ul>
 </div>
