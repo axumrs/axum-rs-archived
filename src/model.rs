@@ -12,7 +12,7 @@ pub struct AppState {
     pub hcap_cfg: HCaptchaConfig,
 }
 
-#[derive(PostgresMapper)]
+#[derive(PostgresMapper, Deserialize, Serialize)]
 #[pg_mapper(table = "subject")]
 pub struct Subject {
     pub id: i32,
@@ -64,7 +64,7 @@ pub struct TopicContent {
     pub html: String,
 }
 
-#[derive(PostgresMapper)]
+#[derive(PostgresMapper, Deserialize, Serialize)]
 #[pg_mapper(table = "tag")]
 pub struct Tag {
     pub id: i32,

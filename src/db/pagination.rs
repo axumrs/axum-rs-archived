@@ -1,6 +1,9 @@
 //! 分页
 
+use serde::{Deserialize, Serialize};
+
 /// 分页
+#[derive(Deserialize, Serialize)]
 pub struct Pagination<T> {
     /// 当前页码
     pub page: u32,

@@ -25,6 +25,7 @@ pub enum AppErrorType {
     AuthError,
     RedisError,
     HttpError,
+    JsonError,
     /// 通用错误
     Common,
 }
@@ -122,6 +123,11 @@ impl From<redis::RedisError> for AppError {
 impl From<bcrypt::BcryptError> for AppError {
     fn from(err: bcrypt::BcryptError) -> Self {
         Self::from_err(err, AppErrorType::Common)
+    }
+}
+impl From<serde_json::Error> for AppError {
+    fn from(err: serde_json::Error) -> Self {
+        Self::from_err(err, AppErrorType::JsonError)
     }
 }
 
