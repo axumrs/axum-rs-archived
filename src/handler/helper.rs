@@ -67,15 +67,9 @@ pub async fn protected_content(
     let hcs_num = hcs.len();
     let protect_num: usize = match hcs_num {
         0..=1 => 0,
-        2 => 1,
-        _ => {
-            let n = f64::ceil(hcs_num as f64 * 0.6) as usize;
-            if n >= hcs_num {
-                hcs_num - 1
-            } else {
-                n
-            }
-        }
+        2..=4 => 1,
+        5..=8 => 2,
+        _ => 3,
     };
     tracing::debug!("protect_num: {:?}, hcs_num: {:?}", protect_num, hcs_num);
     if protect_num < 1 {
