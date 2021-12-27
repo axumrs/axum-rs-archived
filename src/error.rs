@@ -1,12 +1,9 @@
 //! 自定义错误
 
-use std::convert::Infallible;
-
 use askama::Template;
 use axum::{
-    body::{Bytes, Full},
-    http::{Response, StatusCode},
-    response::{Html, IntoResponse},
+    http::StatusCode,
+    response::{Html, IntoResponse, Response},
 };
 
 use crate::html::err::ErrTemplate;
@@ -132,10 +129,7 @@ impl From<serde_json::Error> for AppError {
 }
 
 impl IntoResponse for AppError {
-    type Body = Full<Bytes>;
-    type BodyError = Infallible;
-
-    fn into_response(self) -> Response<Self::Body> {
+    fn into_response(self) -> Response {
         let status_code = (&self).status_code();
         let msg = match self {
             AppError {

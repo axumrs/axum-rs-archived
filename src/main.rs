@@ -1,11 +1,11 @@
 #![recursion_limit = "256"]
-use std::{convert::Infallible, sync::Arc};
+use std::sync::Arc;
 
 use axum::{
     extract::extractor_middleware,
-    handler::{get, post},
     http::StatusCode,
-    service, AddExtensionLayer, Router,
+    routing::{get, get_service, post},
+    AddExtensionLayer, Router,
 };
 use axum_rs::{
     config,
@@ -25,7 +25,7 @@ async fn main() {
 
     dotenv().ok();
     let cfg = config::Config::from_env().unwrap();
-    let pool = cfg.pg.create_pool(tokio_postgres::NoTls).unwrap();
+    let pool = cfg.pg.create_pool(None, tokio_postgres::NoTls).unwrap();
     let rdc = redis::Client::open(cfg.redis.dsn).unwrap();
     tracing::info!("Web服务监听于{}", &cfg.web.addr);
 
@@ -96,11 +96,11 @@ async fn main() {
             post(frontend::topic::get_procted_content),
         )
         .route("/about", get(frontend::about::index));
-    let static_serve = service::get(ServeDir::new("static")).handle_error(|err| {
-        Ok::<_, Infallible>((
+    let static_serve = get_service(ServeDir::new("static")).handle_error(|err| async move {
+        (
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("载入静态资源出错：{}", err),
-        ))
+        )
     });
 
     let app = Router::new()
