@@ -23,7 +23,7 @@ pub async fn read(client: Client, key: &str) -> Option<String> {
     let key = gen_name(key);
     let value = rdb::get(client, &key).await;
     match value {
-        Ok(value) => Some(value),
+        Ok(value) => value,
         Err(err) => {
             tracing::error!("{:?}", err);
             None

@@ -32,13 +32,15 @@ pub async fn get_logined_admin(
                 tracing::error!("get session failed: {:?}", err);
                 AppError::auth_error("UNAUTHENTICATED")
             })?;
-            let admin_session: AdminSession =
-                serde_json::from_str(&admin_session).map_err(|err| {
-                    tracing::error!("des admin_session failed: {:?}", err);
-                    AppError::auth_error("UNAUTHENTICATED")
-                })?;
-            tracing::debug!("admin session: {:?}", admin_session);
-            return Ok(Some(admin_session));
+            if let Some(admin_session) = admin_session {
+                let admin_session: AdminSession =
+                    serde_json::from_str(&admin_session).map_err(|err| {
+                        tracing::error!("des admin_session failed: {:?}", err);
+                        AppError::auth_error("UNAUTHENTICATED")
+                    })?;
+                tracing::debug!("admin session: {:?}", admin_session);
+                return Ok(Some(admin_session));
+            }
         }
     }
     Ok(None)

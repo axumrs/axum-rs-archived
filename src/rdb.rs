@@ -4,29 +4,32 @@ use redis::{aio::Connection, AsyncCommands, Client};
 
 use crate::{error::AppError, Result};
 
+/// 获取连接
 async fn get_conn(client: Client) -> Result<Connection> {
     client.get_async_connection().await.map_err(AppError::from)
 }
 
+/// 将数据写入 redis
 pub async fn set(client: Client, key: &str, value: &str, sec: usize) -> Result<()> {
     let mut conn = get_conn(client).await?;
-    conn.set_ex(key, value, sec).await.map_err(AppError::from)?;
-    Ok(())
+    conn.set_ex(key, value, sec).await.map_err(AppError::from)
 }
-pub async fn get(client: Client, key: &str) -> Result<String> {
+
+/// 从redis获取数据
+pub async fn get(client: Client, key: &str) -> Result<Option<String>> {
     let mut conn = get_conn(client).await?;
-    //let s: String = conn.get(key).await.map_err(AppError::from)?;
-    let s: String = conn.get(key).await.map_err(|err| {
-        tracing::debug!("{:?}", err);
-        AppError::from(err)
-    })?;
+    let s: Option<String> = conn.get(key).await.map_err(AppError::from)?;
     Ok(s)
 }
+
+/// 判断指定的键是否存在于redis
 pub async fn is_exists(client: Client, key: &str) -> Result<bool> {
     let mut conn = get_conn(client).await?;
-    conn.exists(key).await.map_err(AppError::from)?;
-    Ok(true)
+    let r = conn.exists(key).await.map_err(AppError::from)?;
+    Ok(r)
 }
+
+/// 删除指定的键
 pub async fn del(client: Client, key: &str) -> Result<()> {
     let mut conn = get_conn(client).await?;
     conn.del(key).await.map_err(AppError::from)

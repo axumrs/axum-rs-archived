@@ -87,6 +87,9 @@ pub async fn get_procted_content(
     let s = rdb::get(client, &redis_key)
         .await
         .map_err(log_error(handler_name.to_string()))?;
-    let r: ProtectedContent = from_str(&s).unwrap();
-    Ok(Json(r))
+    if let Some(s) = s {
+        let r: ProtectedContent = from_str(&s).unwrap();
+        return Ok(Json(r));
+    }
+    Err(AppError::not_found("没有找到指定的内容"))
 }
