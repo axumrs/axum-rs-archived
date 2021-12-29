@@ -260,6 +260,21 @@ pub async fn update(client: &mut Client, ut: &UpdateTopic, html: &str) -> Result
     Ok(true)
 }
 
-pub async fn detail(client: &Client, subject_slug: &str, slug: &str) -> Result<TopicDetail> {
-    super::query_one(client,"UPDATE topic SET hit=hit+1 WHERE subject_slug=$1 AND slug=$2 AND is_del=false RETURNING id,title,subject_id,slug,author,src,html,tag_names,subject_slug,dateline,hit,subject_name",&[&subject_slug, &slug], Some("没有找到符合条件的文章")).await
+pub async fn detail(client: &mut Client, subject_slug: &str, slug: &str) -> Result<TopicDetail> {
+    let tx = client.transaction().await.map_err(AppError::from)?;
+    let result:TopicDetail = match super::query_one(&tx, "SELECT id,title,subject_id,slug,author,src,html,tag_names,subject_slug,dateline,hit,subject_name FROM v_topic_detail WHERE subject_slug=$1 AND slug=$2", &[&subject_slug, &slug], Some("没有符合条件的文章")).await {
+        Ok(s) => s,
+        Err(err) => {
+            tx.rollback().await.map_err(AppError::from)?;
+            return Err(err);
+        }
+    };
+    if let Err(err) =
+        super::execute(&tx, "UPDATE topic SET hit=hit+1 WHERE id=$1", &[&result.id]).await
+    {
+        tx.rollback().await.map_err(AppError::from)?;
+        return Err(err);
+    };
+    tx.commit().await.map_err(AppError::from)?;
+    Ok(result)
 }
