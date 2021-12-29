@@ -14,7 +14,7 @@ use axum_rs::{
     model::AppState,
 };
 use dotenv::dotenv;
-use tower_http::{services::ServeDir, trace::TraceLayer};
+use tower_http::services::ServeDir;
 
 #[tokio::main]
 async fn main() {
@@ -85,17 +85,17 @@ async fn main() {
         .layer(extractor_middleware::<Auth>());
     let frontend_router = Router::new()
         .route("/", get(frontend::index::index))
-        .route("/subject", get(frontend::subject::index))
-        .route("/subject/:slug", get(frontend::subject::topics))
-        .route("/tag", get(frontend::tag::index))
-        .route("/tag/:name", get(frontend::tag::topics))
-        .route("/topic", get(frontend::topic::index))
-        .route("/topic/:subject_slug/:slug", get(frontend::topic::detail))
+        .route("subject", get(frontend::subject::index))
+        .route("subject/:slug", get(frontend::subject::topics))
+        .route("tag", get(frontend::tag::index))
+        .route("tag/:name", get(frontend::tag::topics))
+        .route("topic", get(frontend::topic::index))
+        .route("topic/:subject_slug/:slug", get(frontend::topic::detail))
         .route(
-            "/topic/get_procted_content",
+            "topic/get_procted_content",
             post(frontend::topic::get_procted_content),
         )
-        .route("/about", get(frontend::about::index));
+        .route("about", get(frontend::about::index));
     let static_serve = get_service(ServeDir::new("static")).handle_error(|err| async move {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -109,7 +109,6 @@ async fn main() {
         .nest("/admin", backend_router)
         .route("/login", get(auth::admin_login_ui).post(auth::admin_login))
         .route("/logout", get(auth::admin_logout))
-        .layer(TraceLayer::new_for_http())
         .layer(AddExtensionLayer::new(state));
     axum::Server::bind(&cfg.web.addr.parse().unwrap())
         .serve(app.into_make_service())
