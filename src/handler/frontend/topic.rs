@@ -51,8 +51,8 @@ pub async fn detail(
     let TopicArgs { subject_slug, slug } = arg;
     tracing::debug!("subject_slug: {:?}, slug: {:?}", subject_slug, slug);
     let handler_name = "frontend_topics_detail";
-    let mut client = get_client(state.clone(), handler_name).await?;
-    let mut result = topic::detail(&mut client, &subject_slug, &slug)
+    let client = get_client(state.clone(), handler_name).await?;
+    let mut result = topic::detail(&client, &subject_slug, &slug)
         .await
         .map_err(log_error(handler_name.to_string()))?;
     let site_key = state.clone().hcap_cfg.site_key.clone();

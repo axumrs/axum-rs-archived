@@ -4,12 +4,12 @@ use crate::error::AppError;
 use crate::form::{CreateSubject, UpdateSubject};
 use crate::model::{Subject, SubjectID, SubjectList};
 use crate::Result;
-use deadpool_postgres::Client;
 use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 use super::pagination::Pagination;
 use super::select_stmt::SelectStmt;
-use super::{execute, query, PAGE_SIZE};
+use super::{execute, PAGE_SIZE};
 
 /// 表名
 const TABLE_NAME: &str = "subject";
@@ -72,10 +72,12 @@ pub async fn select(
         .limit(Some(PAGE_SIZE))
         .offset(Some(page * PAGE_SIZE as u32))
         .build();
-    tracing::debug!("{}", sql);
-    let result = query::<SubjectList>(client, &sql, args).await?;
-    let total_records = count(client, Some(condition), args).await?;
-    Ok(Pagination::new(page, PAGE_SIZE, total_records, result))
+    let count_sql = SelectStmt::builder()
+        .table(TABLE_NAME)
+        .fields("COUNT(*)")
+        .condition(Some(condition))
+        .build();
+    Ok(super::select(client, &sql, &count_sql, args, page).await?)
 }
 pub async fn select_with_summary(
     client: &Client,
@@ -91,10 +93,12 @@ pub async fn select_with_summary(
         .limit(Some(PAGE_SIZE))
         .offset(Some(page * PAGE_SIZE as u32))
         .build();
-    tracing::debug!("{}", sql);
-    let result = query::<Subject>(client, &sql, args).await?;
-    let total_records = count(client, condition, args).await?;
-    Ok(Pagination::new(page, PAGE_SIZE, total_records, result))
+    let count_sql = SelectStmt::builder()
+        .table(TABLE_NAME)
+        .fields("COUNT(*)")
+        .condition(condition)
+        .build();
+    Ok(super::select(client, &sql, &count_sql, args, page).await?)
 }
 
 /// 根据条件获取主题。返回主题，或包含[`AppError`]的错误信息
@@ -115,11 +119,7 @@ pub async fn find(
         .condition(condition)
         .limit(Some(1))
         .build();
-    let result = query::<Subject>(client, &sql, args).await?.pop();
-    match result {
-        Some(subject) => Ok(subject),
-        None => Err(AppError::not_found("没有找到符合条件的主题")),
-    }
+    Ok(super::query_one(client, &sql, args, Some("没有找到符合条件的主题")).await?)
 }
 /// 根据固定链接获取主题。返回主题，或包含[`AppError`]的错误信息
 ///
@@ -155,10 +155,13 @@ pub async fn create(client: &Client, cs: &CreateSubject) -> Result<SubjectID> {
         )));
     };
     let sql = "INSERT INTO subject (name, slug, summary) VALUES ($1, $2, $3) RETURNING id";
-    query::<SubjectID>(client, sql, &[&cs.name, &cs.slug, &cs.summary])
-        .await?
-        .pop()
-        .ok_or(AppError::db_error_from_str("插入主题失败"))
+    Ok(super::query_one(
+        client,
+        sql,
+        &[&cs.name, &cs.slug, &cs.summary],
+        Some("插入主题失败"),
+    )
+    .await?)
 }
 
 /// 更新主题。返回更新结果，或包含[`AppError`]的错误信息
@@ -233,5 +236,5 @@ pub async fn all(client: &Client) -> Result<Vec<SubjectList>> {
         .order(Some("id DESC"))
         .condition(Some("is_del=false"))
         .build();
-    super::query::<SubjectList>(client, &sql, &[]).await
+    Ok(super::query(client, &sql, &[]).await?)
 }

@@ -8,9 +8,8 @@ use crate::{
     time::now,
     Result,
 };
-use deadpool_postgres::Client;
-use tokio_pg_mapper::FromTokioPostgresRow;
 use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 use super::{pagination::Pagination, query_one, select_stmt::SelectStmt, PAGE_SIZE};
 
@@ -18,82 +17,48 @@ use super::{pagination::Pagination, query_one, select_stmt::SelectStmt, PAGE_SIZ
 pub async fn create(client: &mut Client, ct: &CreateTopic, html: &str) -> Result<TopicID> {
     let tx = client.transaction().await.map_err(AppError::from)?;
     // 是否存在
-    let stmt = match tx
-        .prepare("SELECT COUNT(*) FROM topic WHERE subject_id=$1 AND slug=$2")
-        .await
+    match super::count(
+        &tx,
+        "SELECT COUNT(*) FROM topic WHERE subject_id=$1 AND slug=$2",
+        &[&ct.subject_id, &ct.slug],
+    )
+    .await
     {
-        Ok(s) => s,
-        Err(err) => {
+        Ok(row) if row > 0 => {
             tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
+            return Err(AppError::is_exists("相同专题、相同固定链接的文章已存在"));
         }
-    };
-    let count_row = match tx.query_one(&stmt, &[&ct.subject_id, &ct.slug]).await {
-        Ok(row) => row,
         Err(err) => {
             tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    let count: i64 = count_row.get(0);
-    if count > 0 {
-        tx.rollback().await.map_err(AppError::from)?;
-        return Err(AppError::is_exists("相同专题、相同固定链接的文章已存在"));
-    }
-
-    let stmt = tx.prepare("INSERT INTO topic (title, subject_id, slug, summary, author,  dateline, src) VALUES ($1, $2, $3, $4, $5, $6,$7 ) RETURNING id").await;
-    let stmt = match stmt {
-        Ok(s) => s,
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    let now = now();
-    let result = match tx
-        .query(
-            &stmt,
-            &[
-                &ct.title,
-                &ct.subject_id,
-                &ct.slug,
-                &ct.summary,
-                &ct.author,
-                &now,
-                &ct.src,
-            ],
-        )
-        .await
-    {
-        Ok(s) => s,
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    let topic_id = result
-        .iter()
-        .map(|row| TopicID::from_row_ref(row).unwrap())
-        .collect::<Vec<TopicID>>()
-        .pop()
-        .ok_or(AppError::not_found("插入失败"))?;
-    // 内容
-    let stmt = match tx
-        .prepare("INSERT INTO topic_content (topic_id, md, html) VALUES ($1, $2, $3) ON CONFLICT(topic_id) DO UPDATE SET md=EXCLUDED.md,html=EXCLUDED.html")
-        .await
-    {
-        Ok(s) => s,
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    match tx.execute(&stmt, &[&topic_id.id, &ct.md, &html]).await {
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
+            return Err(err);
         }
         _ => {}
+    };
+
+    let now = now();
+    let topic_id: TopicID = match super::query_one(&tx, "INSERT INTO topic (title, subject_id, slug, summary, author,  dateline, src) VALUES ($1, $2, $3, $4, $5, $6,$7 ) RETURNING id",&[
+        &ct.title,
+        &ct.subject_id,
+        &ct.slug,
+        &ct.summary,
+        &ct.author,
+        &now,
+        &ct.src,
+    ] , Some("插入文章失败")).await
+    {
+        Ok(s) => s,
+            Err(err) => {tx.rollback().await.map_err(AppError::from)?;
+            return Err(err);
+            }
+    };
+
+    // 内容
+    match super::execute(&tx, "INSERT INTO topic_content (topic_id, md, html) VALUES ($1, $2, $3) ON CONFLICT(topic_id) DO UPDATE SET md=EXCLUDED.md,html=EXCLUDED.html",& [&topic_id.id, &ct.md, &html]).await {
+        Ok(_) => {},
+        Err(err) => {
+            tx.rollback().await.map_err(AppError::from)?;
+            return Err(err);
+            }
     };
 
     // tag
@@ -101,47 +66,21 @@ pub async fn create(client: &mut Client, ct: &CreateTopic, html: &str) -> Result
         let tags = ct.tags.split(',').collect::<Vec<&str>>();
         let mut tags_id_list: Vec<TagID> = Vec::with_capacity(tags.len());
         for &tag_name in tags.iter() {
-            let stmt = match tx
-            .prepare("INSERT INTO tag(name) VALUES($1) ON CONFLICT(name) DO UPDATE SET name=EXCLUDED.name RETURNING id")
-            .await
-        {
-            Ok(s) => s,
-            Err(err) => {
-                tx.rollback().await.map_err(AppError::from)?;
-                return Err(AppError::from(err));
-            }
-        };
-            let result = match tx.query(&stmt, &[&tag_name]).await {
+            let tags_id:TagID = match super::query_one(&tx, "INSERT INTO tag(name) VALUES($1) ON CONFLICT(name) DO UPDATE SET name=EXCLUDED.name RETURNING id", &[&tag_name], Some("插入标签失败")).await {
                 Ok(s) => s,
                 Err(err) => {
                     tx.rollback().await.map_err(AppError::from)?;
-                    return Err(AppError::from(err));
+                    return Err(err);
                 }
             };
-            let tags_id = result
-                .iter()
-                .map(|row| TagID::from_row_ref(row).unwrap())
-                .collect::<Vec<TagID>>()
-                .pop()
-                .ok_or(AppError::not_found("插入标签失败"))?;
             tags_id_list.push(tags_id);
         }
 
         // topic_tag
         for tag_id in tags_id_list.iter() {
-            let stmt = match tx.prepare("INSERT INTO topic_tag (topic_id, tag_id) VALUES($1,$2) ON CONFLICT(topic_id,tag_id) DO NOTHING").await {
-                Ok(s) => s,
-                Err(err) => {
-                    tx.rollback().await.map_err(AppError::from)?;
-                    return Err(AppError::from(err));
-                }
-            };
-            match tx.execute(&stmt, &[&topic_id.id, &tag_id.id]).await {
-                Err(err) => {
-                    tx.rollback().await.map_err(AppError::from)?;
-                    return Err(AppError::from(err));
-                }
-                _ => {}
+            if let Err(err) = super::execute(&tx, "INSERT INTO topic_tag (topic_id, tag_id) VALUES($1,$2) ON CONFLICT(topic_id,tag_id) DO NOTHING", &[&topic_id.id, &tag_id.id]).await {
+                tx.rollback().await.map_err(AppError::from)?;
+                return Err(err);
             };
         }
     }
@@ -197,23 +136,12 @@ pub async fn select_with_summary(
 /// 删除或还原文章
 pub async fn del_or_restore(client: &mut Client, id: i64, is_del: bool) -> Result<(u64, u64)> {
     let tx = client.transaction().await.map_err(AppError::from)?;
-    let stmt = match tx.prepare("UPDATE topic SET is_del=$1 WHERE id=$2").await {
-        Ok(s) => s,
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    let topic_rows = match tx.execute(&stmt, &[&is_del, &id]).await {
-        Ok(s) => s,
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    let stmt = match tx
-        .prepare("UPDATE topic_tag SET is_del=$1 WHERE topic_id=$2")
-        .await
+    let topic_rows = match super::execute(
+        &tx,
+        "UPDATE topic SET is_del=$1 WHERE id=$2",
+        &[&is_del, &id],
+    )
+    .await
     {
         Ok(s) => s,
         Err(err) => {
@@ -221,7 +149,13 @@ pub async fn del_or_restore(client: &mut Client, id: i64, is_del: bool) -> Resul
             return Err(AppError::from(err));
         }
     };
-    let topic_tag_rows = match tx.execute(&stmt, &[&is_del, &id]).await {
+    let topic_tag_rows = match super::execute(
+        &tx,
+        "UPDATE topic_tag SET is_del=$1 WHERE topic_id=$2",
+        &[&is_del, &id],
+    )
+    .await
+    {
         Ok(s) => s,
         Err(err) => {
             tx.rollback().await.map_err(AppError::from)?;
@@ -247,95 +181,55 @@ pub async fn find_to_edit(client: &Client, id: i64) -> Result<TopicWithMdAndTags
 pub async fn update(client: &mut Client, ut: &UpdateTopic, html: &str) -> Result<bool> {
     let tx = client.transaction().await.map_err(AppError::from)?;
     // 是否存在
-    let stmt = match tx
-        .prepare("SELECT COUNT(*) FROM topic WHERE subject_id=$1 AND slug=$2 AND id<>$3")
-        .await
+    match super::count(
+        &tx,
+        "SELECT COUNT(*) FROM topic WHERE subject_id=$1 AND slug=$2 AND id<>$3",
+        &[&ut.subject_id, &ut.slug, &ut.id],
+    )
+    .await
     {
-        Ok(s) => s,
-        Err(err) => {
+        Ok(row) if row > 0 => {
             tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
+            return Err(AppError::is_exists("已存在"));
         }
-    };
-    let count_row = match tx
-        .query_one(&stmt, &[&ut.subject_id, &ut.slug, &ut.id])
-        .await
-    {
-        Ok(row) => row,
         Err(err) => {
             tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    let count: i64 = count_row.get(0);
-    if count > 0 {
-        tx.rollback().await.map_err(AppError::from)?;
-        return Err(AppError::is_exists("相同专题、相同固定链接的文章已存在"));
-    }
-
-    let stmt = tx.prepare("UPDATE topic SET title=$1, subject_id=$2, slug=$3, summary=$4, author=$5, src=$6 WHERE id=$7").await;
-    let stmt = match stmt {
-        Ok(s) => s,
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    match tx
-        .execute(
-            &stmt,
-            &[
-                &ut.title,
-                &ut.subject_id,
-                &ut.slug,
-                &ut.summary,
-                &ut.author,
-                &ut.src,
-                &ut.id,
-            ],
-        )
-        .await
-    {
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
+            return Err(err);
         }
         _ => {}
+    };
+
+    if let Err(err) = super::execute(&tx, "UPDATE topic SET title=$1, subject_id=$2, slug=$3, summary=$4, author=$5, src=$6 WHERE id=$7", &[
+        &ut.title,
+        &ut.subject_id,
+        &ut.slug,
+        &ut.summary,
+        &ut.author,
+        &ut.src,
+        &ut.id,
+    ]).await {
+        tx.rollback().await.map_err(AppError::from)?;
+        return Err(err);
     };
     // 内容
-    let stmt = match tx
-        .prepare("UPDATE topic_content SET  md=$1, html=$2 WHERE topic_id=$3")
-        .await
+    if let Err(err) = super::execute(
+        &tx,
+        "UPDATE topic_content SET  md=$1, html=$2 WHERE topic_id=$3",
+        &[&ut.md, &html, &ut.id],
+    )
+    .await
     {
-        Ok(s) => s,
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    match tx.execute(&stmt, &[&ut.md, &html, &ut.id]).await {
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-        _ => {}
+        tx.rollback().await.map_err(AppError::from)?;
+        return Err(err);
     };
 
     // tag
     // 删除所有关联的tag
-    let stmt = match tx.prepare("DELETE FROM topic_tag WHERE topic_id=$1").await {
-        Ok(s) => s,
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    match tx.execute(&stmt, &[&ut.id]).await {
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-        _ => {}
+    if let Err(err) =
+        super::execute(&tx, "DELETE FROM topic_tag WHERE topic_id=$1", &[&ut.id]).await
+    {
+        tx.rollback().await.map_err(AppError::from)?;
+        return Err(err);
     };
 
     // 添加并关联标签
@@ -343,47 +237,22 @@ pub async fn update(client: &mut Client, ut: &UpdateTopic, html: &str) -> Result
         let tags = ut.tags.split(',').collect::<Vec<&str>>();
         let mut tags_id_list: Vec<TagID> = Vec::with_capacity(tags.len());
         for &tag_name in tags.iter() {
-            let stmt = match tx
-            .prepare("INSERT INTO tag(name) VALUES($1) ON CONFLICT(name) DO UPDATE SET name=EXCLUDED.name RETURNING id")
-            .await
-        {
-            Ok(s) => s,
-            Err(err) => {
-                tx.rollback().await.map_err(AppError::from)?;
-                return Err(AppError::from(err));
-            }
-        };
-            let result = match tx.query(&stmt, &[&tag_name]).await {
+            let tags_id :TagID = match super::query_one(&tx, "INSERT INTO tag(name) VALUES($1) ON CONFLICT(name) DO UPDATE SET name=EXCLUDED.name RETURNING id",&[&tag_name] , Some("插入标签失败")).await {
                 Ok(s) => s,
                 Err(err) => {
                     tx.rollback().await.map_err(AppError::from)?;
-                    return Err(AppError::from(err));
+                    return Err(err);
                 }
             };
-            let tags_id = result
-                .iter()
-                .map(|row| TagID::from_row_ref(row).unwrap())
-                .collect::<Vec<TagID>>()
-                .pop()
-                .ok_or(AppError::not_found("插入标签失败"))?;
             tags_id_list.push(tags_id);
         }
 
         // topic_tag
         for tag_id in tags_id_list.iter() {
-            let stmt = match tx.prepare("INSERT INTO topic_tag (topic_id, tag_id) VALUES($1,$2) ON CONFLICT(topic_id,tag_id) DO NOTHING").await {
-                Ok(s) => s,
-                Err(err) => {
-                    tx.rollback().await.map_err(AppError::from)?;
-                    return Err(AppError::from(err));
-                }
-            };
-            match tx.execute(&stmt, &[&ut.id, &tag_id.id]).await {
-                Err(err) => {
-                    tx.rollback().await.map_err(AppError::from)?;
-                    return Err(AppError::from(err));
-                }
-                _ => {}
+            if let Err(err) = super::execute(&tx, "INSERT INTO topic_tag (topic_id, tag_id) VALUES($1,$2) ON CONFLICT(topic_id,tag_id) DO NOTHING", &[&ut.id, &tag_id.id]).await {
+                tx.rollback().await.map_err(AppError::from)?;
+                return Err(AppError::from(err));
+
             };
         }
     }
@@ -391,44 +260,6 @@ pub async fn update(client: &mut Client, ut: &UpdateTopic, html: &str) -> Result
     Ok(true)
 }
 
-pub async fn detail(client: &mut Client, subject_slug: &str, slug: &str) -> Result<TopicDetail> {
-    let tx = client.transaction().await.map_err(AppError::from)?;
-    let stmt = match tx.prepare("SELECT id,title,subject_id,slug,author,src,html,tag_names,subject_slug,dateline,hit,subject_name FROM v_topic_detail WHERE subject_slug=$1 AND slug=$2").await {
-        Ok(s) => s,
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    let result = tx
-        .query(&stmt, &[&subject_slug, &slug])
-        .await
-        .map_err(AppError::from)?
-        .iter()
-        .map(|row| TopicDetail::from_row_ref(row).unwrap())
-        .collect::<Vec<TopicDetail>>()
-        .pop();
-    let result = match result {
-        Some(r) => r,
-        None => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::not_found("不存在的文章"));
-        }
-    };
-    let stmt = match tx.prepare("UPDATE topic SET hit=hit+1 WHERE id=$1").await {
-        Ok(s) => s,
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-    };
-    match tx.execute(&stmt, &[&result.id]).await {
-        Err(err) => {
-            tx.rollback().await.map_err(AppError::from)?;
-            return Err(AppError::from(err));
-        }
-        _ => {}
-    };
-    tx.commit().await.map_err(AppError::from)?;
-    Ok(result)
+pub async fn detail(client: &Client, subject_slug: &str, slug: &str) -> Result<TopicDetail> {
+    super::query_one(client,"UPDATE topic SET hit=hit+1 WHERE subject_slug=$1 AND slug=$2 AND is_del=false RETURNING id,title,subject_id,slug,author,src,html,tag_names,subject_slug,dateline,hit,subject_name",&[&subject_slug, &slug], Some("没有找到符合条件的文章")).await
 }

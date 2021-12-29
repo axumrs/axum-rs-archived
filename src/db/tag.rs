@@ -1,5 +1,5 @@
-use deadpool_postgres::Client;
 use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 use crate::{
     error::AppError,
@@ -29,7 +29,7 @@ pub async fn select(
         .fields("COUNT(*)")
         .condition(condition)
         .build();
-    super::select::<Tag>(client, &sql, &count_sql, args, page).await
+    Ok(super::select(client, &sql, &count_sql, args, page).await?)
 }
 pub async fn find(
     client: &Client,
@@ -42,7 +42,7 @@ pub async fn find(
         .condition(condition)
         .limit(Some(1))
         .build();
-    query_one::<Tag>(client, &sql, args, Some("没有找到符合条件的标签")).await
+    Ok(query_one(client, &sql, args, Some("没有找到符合条件的标签")).await?)
 }
 pub async fn count(
     client: &Client,
@@ -78,7 +78,7 @@ pub async fn create(client: &Client, ct: &CreateTag) -> Result<TagID> {
         return Err(AppError::is_exists("同名的标签已存在"));
     }
     let sql = "INSERT INTO tag (name, is_del) VALUES ($1, false) RETURNING id";
-    query_one::<TagID>(client, sql, &[&ct.name], Some("创建标签失败")).await
+    Ok(query_one(client, sql, &[&ct.name], Some("创建标签失败")).await?)
 }
 pub async fn update(client: &Client, ut: &UpdateTag) -> Result<u64> {
     if is_exists(client, "name=$1 AND id<>$2", &[&ut.name, &ut.id]).await? {

@@ -1,7 +1,6 @@
-use tokio_postgres::{types::ToSql, Statement};
+use tokio_postgres::{types::ToSql, GenericClient, Statement};
 
 use crate::{error::AppError, Result};
-use deadpool_postgres::Client;
 use tokio_pg_mapper::FromTokioPostgresRow;
 
 use self::pagination::Pagination;
@@ -22,7 +21,10 @@ const PAGE_SIZE: u8 = 30;
 ///
 /// * `client` - 数据库连接对象
 /// * `sql` - SQL语句
-async fn get_stmt(client: &Client, sql: &str) -> Result<Statement> {
+async fn get_stmt<C>(client: &C, sql: &str) -> Result<Statement>
+where
+    C: GenericClient,
+{
     client.prepare(sql).await.map_err(AppError::from)
 }
 
@@ -33,11 +35,11 @@ async fn get_stmt(client: &Client, sql: &str) -> Result<Statement> {
 /// * `client` - 数据库连接对象
 /// * `sql` - SQL语句
 /// * `args` - 查询参数
-async fn query<T: FromTokioPostgresRow>(
-    client: &Client,
-    sql: &str,
-    args: &[&(dyn ToSql + Sync)],
-) -> Result<Vec<T>> {
+async fn query<T, C>(client: &C, sql: &str, args: &[&(dyn ToSql + Sync)]) -> Result<Vec<T>>
+where
+    T: FromTokioPostgresRow,
+    C: GenericClient,
+{
     let stmt = get_stmt(client, sql).await?;
     let result = client
         .query(&stmt, args)
@@ -49,24 +51,28 @@ async fn query<T: FromTokioPostgresRow>(
     Ok(result)
 }
 
-async fn query_one<T: FromTokioPostgresRow>(
-    client: &Client,
+async fn query_one<T, C>(
+    client: &C,
     sql: &str,
     args: &[&(dyn ToSql + Sync)],
     msg: Option<&str>,
-) -> Result<T> {
+) -> Result<T>
+where
+    T: FromTokioPostgresRow,
+    C: GenericClient,
+{
     let msg = match msg {
         Some(msg) => msg,
         None => "没有找到符合条件的记录",
     };
-    query::<T>(client, &sql, args)
+    query::<T, C>(client, &sql, args)
         .await?
         .pop()
         .ok_or(AppError::not_found(msg))
 }
 
 async fn del_or_restore(
-    client: &Client,
+    client: &impl GenericClient,
     table: &str,
     id: &(dyn ToSql + Sync),
     is_del_opt: bool,
@@ -75,10 +81,10 @@ async fn del_or_restore(
     let sql = format!("UPDATE {} SET is_del=$1 WHERE id=$2", table);
     execute(client, &sql, &[&is_del, id]).await
 }
-async fn del(client: &Client, table: &str, id: &(dyn ToSql + Sync)) -> Result<u64> {
+async fn del(client: &impl GenericClient, table: &str, id: &(dyn ToSql + Sync)) -> Result<u64> {
     del_or_restore(client, table, id, true).await
 }
-async fn restore(client: &Client, table: &str, id: &(dyn ToSql + Sync)) -> Result<u64> {
+async fn restore(client: &impl GenericClient, table: &str, id: &(dyn ToSql + Sync)) -> Result<u64> {
     del_or_restore(client, table, id, false).await
 }
 
@@ -89,7 +95,11 @@ async fn restore(client: &Client, table: &str, id: &(dyn ToSql + Sync)) -> Resul
 /// * `client` - 数据库连接对象
 /// * `sql` - SQL语句
 /// * `args` - 查询参数
-async fn execute(client: &Client, sql: &str, args: &[&(dyn ToSql + Sync)]) -> Result<u64> {
+async fn execute(
+    client: &impl GenericClient,
+    sql: &str,
+    args: &[&(dyn ToSql + Sync)],
+) -> Result<u64> {
     let stmt = get_stmt(client, sql).await?;
     client.execute(&stmt, args).await.map_err(AppError::from)
 }
@@ -101,7 +111,11 @@ async fn execute(client: &Client, sql: &str, args: &[&(dyn ToSql + Sync)]) -> Re
 /// * `client` - 数据库连接对象
 /// * `sql` - SQL语句
 /// * `args` - 查询参数
-async fn count(client: &Client, sql: &str, args: &[&(dyn ToSql + Sync)]) -> Result<i64> {
+async fn count(
+    client: &impl GenericClient,
+    sql: &str,
+    args: &[&(dyn ToSql + Sync)],
+) -> Result<i64> {
     let stmt = get_stmt(client, sql).await?;
     let result = client
         .query_one(&stmt, args)
@@ -111,14 +125,14 @@ async fn count(client: &Client, sql: &str, args: &[&(dyn ToSql + Sync)]) -> Resu
     Ok(result)
 }
 
-async fn select<T: FromTokioPostgresRow>(
-    client: &Client,
+async fn select<T: FromTokioPostgresRow, C: GenericClient>(
+    client: &C,
     sql: &str,
     count_sql: &str,
     args: &[&(dyn ToSql + Sync)],
     page: u32,
 ) -> Result<Pagination<Vec<T>>> {
-    let data = query::<T>(client, sql, args).await?;
+    let data = query::<T, C>(client, sql, args).await?;
     let total_records = count(client, count_sql, args).await?;
     Ok(Pagination::new(page, PAGE_SIZE, total_records, data))
 }

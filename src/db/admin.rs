@@ -1,5 +1,5 @@
-use deadpool_postgres::Client;
 use tokio_postgres::types::ToSql;
+use tokio_postgres::Client;
 
 use crate::{
     error::AppError,
@@ -17,13 +17,13 @@ pub async fn create(client: &Client, ca: CreateAdmin) -> Result<AdminID> {
         return Err(AppError::is_exists("同名的管理员已存在"));
     }
     let sql = "INSERT INTO admin (username, password) VALUES ($1, $2) RETURNING id";
-    let result = super::query::<AdminID>(client, sql, &[&ca.username, &ca.password])
-        .await?
-        .pop();
-    match result {
-        Some(result) => Ok(result),
-        None => Err(AppError::db_error_from_str("添加管理员失败")),
-    }
+    Ok(super::query_one(
+        client,
+        sql,
+        &[&ca.username, &ca.password],
+        Some("添加管理员失败"),
+    )
+    .await?)
 }
 pub async fn del_or_restore(client: &Client, id: i32, is_del_opt: bool) -> Result<()> {
     let sql = "UPDATE admin SET is_del = $1 WHERE id=$2 AND is_sys=false";
@@ -42,7 +42,7 @@ pub async fn find_by_condition(
         .condition(Some(condition))
         .limit(Some(1))
         .build();
-    super::query_one::<Admin>(client, &sql, args, Some("不存在的管理员")).await
+    Ok(super::query_one(client, &sql, args, Some("不存在的管理员")).await?)
 }
 pub async fn find(client: &Client, username: &str) -> Result<Admin> {
     find_by_condition(client, "username=$1 AND is_del=false", &[&username]).await
@@ -70,7 +70,7 @@ pub async fn select(
         .fields("COUNT(*)")
         .condition(condition)
         .build();
-    super::select::<Admin>(client, &sql, &count_sql, args, page).await
+    Ok(super::select(client, &sql, &count_sql, args, page).await?)
 }
 pub async fn update(client: &Client, ua: UpdateAdmin) -> Result<u64> {
     let sql = "UPDATE admin SET password = $1 WHERE id=$2";
