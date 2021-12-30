@@ -23,6 +23,7 @@ pub enum AppErrorType {
     RedisError,
     HttpError,
     JsonError,
+    NoCached,
     /// 通用错误
     Common,
 }
@@ -78,6 +79,9 @@ impl AppError {
             error_type: AppErrorType::Template,
         }
     }
+    pub fn no_cached(msg: &str) -> Self {
+        Self::from_str(msg, AppErrorType::NoCached)
+    }
     pub fn auth_error(msg: &str) -> Self {
         Self::from_str(msg, AppErrorType::AuthError)
     }
@@ -86,6 +90,7 @@ impl AppError {
             AppErrorType::NotFound => StatusCode::NOT_FOUND,
             AppErrorType::DbError => StatusCode::INTERNAL_SERVER_ERROR,
             AppErrorType::Template => StatusCode::INTERNAL_SERVER_ERROR,
+            AppErrorType::NoCached => StatusCode::OK,
             _ => StatusCode::BAD_REQUEST,
         }
     }

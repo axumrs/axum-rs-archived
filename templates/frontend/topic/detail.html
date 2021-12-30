@@ -50,23 +50,34 @@
 <script>
     {% for uuid in uuids %}
     function get_procted_content_{{uuid}}(response) {
+        let item =  $('#hcaptcha-{{uuid}}');
+        item.html(`<div class="text-center">
+            <div class="spinner-grow text-info" role="status">
+            <span class="sr-only">请稍等……</span>
+            </div>
+            </div>`);
         get_procted_content('{{uuid}}', response);
     }
     {%endfor%}
     function get_procted_content(id, response) {
         $.post('/topic/get_procted_content', {id: id, hcaptcha_response: response}, function(data) {
+            let item =  $('#hcaptcha-' + id);
             if(data && data.tag && data.content) {
-                let item =  $('#hcaptcha-' + id);
-                let html = `<${data.tag} id="procted_content_${id}">${data.content}</${data.tag}>`;
+                let html = `<${data.tag} id="procted_content_${id}" style="border:5px solid #17a2b8">${data.content}</${data.tag}>`;
                 item.after(html);
                 item.remove();
                 if (data.tag === 'pre'){
                     hljs.highlightElement($(`#procted_content_${id}`)[0]);
 
                 }
-            }
-        });
-    }
+           for(let i = 0; i<5;i++){
+               $(`#procted_content_${id}`).animate({borderWidth:"-=1px"}, 'slow');
+           }
+       } else {
+               item.html('<div class="text-danger py-3">获取内容失败，请刷新页面重试。</div>');
+        }
+    });
+}
 </script>
 <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 {%endblock%}

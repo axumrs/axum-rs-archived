@@ -13,7 +13,7 @@
       content="{%block title %}{%endblock%},{%block parent_title%}{%endblock%},axum,企业开发,教程,视频教程,axum.rs"
     />
     <link rel="icon" href="/static/img/logo.svg" type="image/svg+xml" />
-    <link rel="alternate icon" href="/static/img" type="image/png" />
+    <link rel="alternate icon" href="/static/img/logo.png" type="image/png" />
     <meta
       property="og:title"
       content="AXUM中文网 - 带你使用 axum 构建企业应用 - axum.rs"
@@ -130,7 +130,7 @@
 
         <!-- Main content -->
         <div class="content">
-          <div class="container">
+          <div class="container axumrs-content">
             {% block content %} 在此输入内容 {%endblock %}
           </div>
           <!-- /.container-fluid -->
@@ -161,18 +161,26 @@
     <script src="/static/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
     <!-- AdminLTE App -->
     <script src="/static/adminlte/dist/js/adminlte.min.js"></script>
-        <script>
-            $(function(){
-                let url = location.pathname;
-                $('.navbar-nav > .nav-item').each(function(){
-                   let item =  $(this).find('a');
-                    if(item.attr('href') === url) {
-                        item.addClass('active');
-                        return;
-                    }
+    <script>
+        $(function(){
+                    let url = location.pathname;
+                    $('.navbar-nav > .nav-item').each(function(){
+                                let item =  $(this).find('a');
+                                if(item.attr('href') === url) {
+                                            item.addClass('active');
+                                            return;
+                                        }
+                            });
                 });
-            });
-        </script>
+                $(function(){
+                            $('.axumrs-content  img').each(function(){
+                                        $(this).addClass('img-fluid');
+                                    });
+                            $('.axumrs-content table').each(function(){
+                                        $(this).addClass('table').addClass('table-striped').addClass('my-3');
+                                    });
+                        });
+    </script>
     {%block js%}{%endblock %}
   </body>
 </html>

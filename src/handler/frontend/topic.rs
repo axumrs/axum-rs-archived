@@ -87,5 +87,5 @@ pub async fn get_procted_content(
         let r: ProtectedContent = from_str(&s).unwrap();
         return Ok(Json(r));
     }
-    Err(AppError::not_found("没有找到指定的内容"))
+    Err(AppError::no_cached("没有找到需要的内容，请刷新页面重试"))
 }
