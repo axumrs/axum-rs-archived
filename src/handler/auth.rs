@@ -66,8 +66,7 @@ pub async fn admin_login(
         redis_key,
     } = session::gen_key(&cfg);
     tracing::debug!("{}", &redis_key);
-    let client = state.rdc.clone();
-    rdb::set(client, &redis_key, &data, cfg.expired)
+    rdb::set(&state.rdc, &redis_key, &data, cfg.expired)
         .await
         .map_err(AppError::from)?;
     let cookie = format!("{}={}", cookie_key, id);
@@ -81,9 +80,8 @@ pub async fn admin_logout(
     let cfg = state.sess_cfg.clone();
     let cookie = get_cookie(&headers, &cfg.id_name);
     if let Some(val) = cookie {
-        let client = state.rdc.clone();
         let redis_key = gen_redis_key(&cfg, &val);
-        rdb::del(client, &redis_key).await?;
+        rdb::del(&state.rdc, &redis_key).await?;
     }
     let cookie_logout = format!("{}=", &cfg.id_name);
     redirect_with_cookie("/login", Some(&cookie_logout))

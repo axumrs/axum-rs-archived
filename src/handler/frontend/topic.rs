@@ -79,10 +79,8 @@ pub async fn get_procted_content(
             crate::error::AppErrorType::Common,
         ));
     };
-    let client = state.rdc.clone();
     let redis_key = format!("protected_content:{}", &frm.id);
-    // TODO
-    let s = rdb::get(client, &redis_key)
+    let s = rdb::get(&state.rdc, &redis_key)
         .await
         .map_err(log_error(handler_name.to_string()))?;
     if let Some(s) = s {

@@ -26,8 +26,7 @@ pub async fn index(
     };
     let handler_name = "frontend_subject_index";
     let cache_key = cache::gen_name(format!("{}:{}", handler_name, page).as_str());
-    let cache_client = state.clone().rdc.clone();
-    let cached_content = cache::read(cache_client.clone(), &cache_key).await;
+    let cached_content = cache::read(&state.rdc, &cache_key).await;
     tracing::debug!("page: {:?}", page);
     let client = get_client(&state, handler_name).await?;
     let mut list: Option<Pagination<Vec<Subject>>> = None;
@@ -48,12 +47,7 @@ pub async fn index(
         let list_db = subject::select_with_summary(&client, Some("is_del=false"), &[], page)
             .await
             .map_err(log_error(handler_name.to_string()))?;
-        cache::write(
-            cache_client,
-            &cache_key,
-            json!(list_db).to_string().as_str(),
-        )
-        .await;
+        cache::write(&state.rdc, &cache_key, json!(list_db).to_string().as_str()).await;
         list = Some(list_db);
     };
 

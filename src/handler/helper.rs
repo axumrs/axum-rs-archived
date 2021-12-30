@@ -98,7 +98,7 @@ pub async fn protected_content(
                 } else {
                     out_uuids.push(c.uuid.clone());
                     let key = format!("protected_content:{}", c.uuid);
-                    rdb::set(client.clone(), &key, json!(c).to_string().as_str(), 60 * 20)
+                    rdb::set(&client, &key, json!(c).to_string().as_str(), 60 * 20)
                         .await
                         .unwrap();
                     format!(

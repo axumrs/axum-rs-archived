@@ -19,8 +19,7 @@ use super::PaginationArgs;
 pub async fn index(Extension(state): Extension<Arc<AppState>>) -> Result<Html<String>> {
     let handler_name = "frontend_tag_index";
     let cache_key = cache::gen_name(format!("{}:all", handler_name).as_str());
-    let cache_client = state.rdc.clone();
-    let cached_content = cache::read(cache_client.clone(), &cache_key).await;
+    let cached_content = cache::read(&state.rdc, &cache_key).await;
     let client = get_client(&state, handler_name).await?;
     let mut tags: Option<Vec<Tag>> = None;
     let mut flag = false;
@@ -40,12 +39,7 @@ pub async fn index(Extension(state): Extension<Arc<AppState>>) -> Result<Html<St
         let tags_db = tag::all(&client)
             .await
             .map_err(log_error(handler_name.to_string()))?;
-        cache::write(
-            cache_client,
-            &cache_key,
-            json!(tags_db).to_string().as_str(),
-        )
-        .await;
+        cache::write(&state.rdc, &cache_key, json!(tags_db).to_string().as_str()).await;
         tags = Some(tags_db);
     }
     let tmpl = IndexTemplate {
