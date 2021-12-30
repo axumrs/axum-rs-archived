@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use axum::http::HeaderMap;
 
 use crate::{
@@ -19,13 +17,14 @@ pub mod tag;
 pub mod topic;
 
 pub async fn get_logined_admin(
-    state: Arc<AppState>,
+    state: &AppState,
     headers: &HeaderMap,
 ) -> Result<Option<AdminSession>> {
     let sess_cfg = state.clone().sess_cfg.clone();
     let cookie = get_cookie(headers, &sess_cfg.id_name);
     if let Some(session_id) = cookie {
         if !session_id.is_empty() {
+            // TODO
             let client = state.rdc.clone();
             let redis_key = gen_redis_key(&sess_cfg, &session_id);
             let admin_session = rdb::get(client, &redis_key).await.map_err(|err| {

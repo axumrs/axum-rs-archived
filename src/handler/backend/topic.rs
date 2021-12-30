@@ -22,7 +22,7 @@ use std::sync::Arc;
 
 pub async fn add(Extension(state): Extension<Arc<AppState>>) -> Result<Html<String>> {
     let handler_name = "backend_topic_add";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let subjects = subject::all(&client)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -36,7 +36,7 @@ pub async fn add_action(
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_topic_add";
     let html_text = md::to_html(&ct.md);
-    let mut client = get_client(state, handler_name).await?;
+    let mut client = get_client(&state, handler_name).await?;
     topic::create(&mut client, &ct, &html_text)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -48,7 +48,7 @@ pub async fn index(
     args: Option<Query<arg::BackendQueryArg>>,
 ) -> Result<Html<String>> {
     let handler_name = "backend_topic_index";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let args = args.unwrap().0;
     let q_keyword = format!("%{}%", args.keyword());
     let list = topic::select(
@@ -68,7 +68,7 @@ pub async fn del(
     Path(id): Path<i64>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_topic_del";
-    let mut client = get_client(state, handler_name).await?;
+    let mut client = get_client(&state, handler_name).await?;
     let (topic_rows, topic_tag_rows) = topic::del_or_restore(&mut client, id, true)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -84,7 +84,7 @@ pub async fn restore(
     Path(id): Path<i64>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_topic_restore";
-    let mut client = get_client(state, handler_name).await?;
+    let mut client = get_client(&state, handler_name).await?;
     let (topic_rows, topic_tag_rows) = topic::del_or_restore(&mut client, id, false)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -100,7 +100,7 @@ pub async fn edit(
     Path(id): Path<i64>,
 ) -> Result<Html<String>> {
     let handler_name = "backend_topic_edit";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let subjects = subject::all(&client)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -119,7 +119,7 @@ pub async fn edit_action(
     Form(ut): Form<form::UpdateTopic>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_topic_edit_action";
-    let mut client = get_client(state, handler_name).await?;
+    let mut client = get_client(&state, handler_name).await?;
     let html_text = md::to_html(&ut.md);
     topic::update(&mut client, &ut, &html_text)
         .await

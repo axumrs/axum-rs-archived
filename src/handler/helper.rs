@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::model::AppState;
 use crate::Result;
 use crate::{error::AppError, rdb};
@@ -13,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
 
-pub async fn get_client(state: Arc<AppState>, handler_name: &str) -> Result<Client> {
+pub async fn get_client(state: &AppState, handler_name: &str) -> Result<Client> {
     state.pool.get().await.map_err(|err| {
         tracing::error!("无法获取数据库连接：{:?},  {}", err, handler_name);
         AppError::from(err)
@@ -51,7 +49,7 @@ fn in_idx(idx: &[usize], i: usize) -> bool {
 }
 pub async fn protected_content(
     html: &str,
-    client: redis::Client,
+    client: &redis::Client,
     site_key: &str,
 ) -> (String, Vec<String>) {
     let mut hcs = vec![];

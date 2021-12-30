@@ -30,7 +30,7 @@ pub async fn index(
         None => 0,
     };
     let handler_name = "frontend_topics_index";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let list = topic::select_with_summary(&client, None, &[], Some("id DESC"), page)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -51,12 +51,12 @@ pub async fn detail(
     let TopicArgs { subject_slug, slug } = arg;
     tracing::debug!("subject_slug: {:?}, slug: {:?}", subject_slug, slug);
     let handler_name = "frontend_topics_detail";
-    let mut client = get_client(state.clone(), handler_name).await?;
+    let mut client = get_client(&state.clone(), handler_name).await?;
     let mut result = topic::detail(&mut client, &subject_slug, &slug)
         .await
         .map_err(log_error(handler_name.to_string()))?;
-    let site_key = state.clone().hcap_cfg.site_key.clone();
-    let (p_html, uuids) = protected_content(&result.html, state.rdc.clone(), &site_key).await;
+    let site_key = state.hcap_cfg.site_key.clone();
+    let (p_html, uuids) = protected_content(&result.html, &state.rdc, &site_key).await;
     result.html = p_html;
     let tmpl = DetailTemplate {
         topic: result,
@@ -70,12 +70,9 @@ pub async fn get_procted_content(
     Form(frm): Form<form::GetProctedContent>,
 ) -> Result<Json<ProtectedContent>> {
     let handler_name = "frontend_topics_get_procted_content";
-    let is_valid = hcaptcha::verify(
-        frm.hcaptcha_response,
-        state.clone().hcap_cfg.secret_key.clone(),
-    )
-    .await
-    .map_err(log_error(handler_name.to_string()))?;
+    let is_valid = hcaptcha::verify(frm.hcaptcha_response, state.hcap_cfg.secret_key.clone())
+        .await
+        .map_err(log_error(handler_name.to_string()))?;
     if !is_valid {
         return Err(AppError::from_str(
             "人机验证失败",
@@ -84,6 +81,7 @@ pub async fn get_procted_content(
     };
     let client = state.rdc.clone();
     let redis_key = format!("protected_content:{}", &frm.id);
+    // TODO
     let s = rdb::get(client, &redis_key)
         .await
         .map_err(log_error(handler_name.to_string()))?;

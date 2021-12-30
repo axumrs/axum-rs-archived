@@ -42,7 +42,7 @@ pub async fn admin_login(
     if !is_valid {
         return Err(AppError::auth_error("人机验证失败"));
     }
-    let client = get_client(state.clone(), handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let login_admin = admin::find(&client, &login.username)
         .await
         .map_err(log_error(handler_name.to_string()))?;

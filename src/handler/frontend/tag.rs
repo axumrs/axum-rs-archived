@@ -19,9 +19,9 @@ use super::PaginationArgs;
 pub async fn index(Extension(state): Extension<Arc<AppState>>) -> Result<Html<String>> {
     let handler_name = "frontend_tag_index";
     let cache_key = cache::gen_name(format!("{}:all", handler_name).as_str());
-    let cache_client = state.clone().rdc.clone();
+    let cache_client = state.rdc.clone();
     let cached_content = cache::read(cache_client.clone(), &cache_key).await;
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let mut tags: Option<Vec<Tag>> = None;
     let mut flag = false;
     if let Some(cached_content) = cached_content {
@@ -66,7 +66,7 @@ pub async fn topics(
     let name = urlencoding::decode(&name).unwrap().into_owned();
     tracing::debug!("name: {:?}, page: {:?}", name, page);
     let handler_name = "frontend_tag_topics";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let tag = tag::find(&client, Some("name=$1 AND is_del=false"), &[&name])
         .await
         .map_err(log_error(handler_name.to_string()))?;

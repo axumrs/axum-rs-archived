@@ -24,7 +24,7 @@ pub async fn index(
     let handler_name = "backend_tag_index";
     let args = args.unwrap().0;
     let q_keyword = format!("%{}%", args.keyword());
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let tag_list = tag::select(
         &client,
         Some("is_del=$1 AND name ILIKE $2"),
@@ -48,7 +48,7 @@ pub async fn add_action(
     Form(ct): Form<form::CreateTag>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_tag_add_action";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     tag::create(&client, &ct)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -60,7 +60,7 @@ pub async fn edit(
     Path(id): Path<i32>,
 ) -> Result<Html<String>> {
     let handler_name = "backend_tag_edit";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let tag = tag::find(&client, Some("id=$1"), &[&id])
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -72,7 +72,7 @@ pub async fn edit_action(
     Form(ut): Form<form::UpdateTag>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_tag_edit_action";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     tag::update(&client, &ut)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -83,7 +83,7 @@ pub async fn del(
     Path(id): Path<i32>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_tag_del";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     tag::del(&client, id)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -94,7 +94,7 @@ pub async fn restore(
     Path(id): Path<i32>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_tag_restore";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     tag::restore(&client, id)
         .await
         .map_err(log_error(handler_name.to_string()))?;

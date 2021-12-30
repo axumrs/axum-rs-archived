@@ -23,7 +23,7 @@ pub async fn index(
     args: Option<Query<arg::SubjectBackendQueryArg>>,
 ) -> Result<Html<String>> {
     let handler_name = "backend_subject_index";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let args = args.unwrap().0;
     let q_keyword = format!("%{}%", args.keyword());
     let subject_list = subject::select(
@@ -49,7 +49,7 @@ pub async fn add_action(
     form: Form<form::CreateSubject>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_subject_add_action";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     subject::create(&client, &form)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -60,7 +60,7 @@ pub async fn edit(
     Path(id): Path<i32>,
 ) -> Result<Html<String>> {
     let handler_name = "backend_subject_edit";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let sub = subject::find(&client, Some("id=$1"), &[&id])
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -72,7 +72,7 @@ pub async fn edit_action(
     form: Form<form::UpdateSubject>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_subject_edit_action";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     subject::update(&client, &form)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -83,7 +83,7 @@ pub async fn del(
     Path(id): Path<i32>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_subject_del";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     subject::delete(&client, id)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -94,7 +94,7 @@ pub async fn restore(
     Path(id): Path<i32>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_subject_restore";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     subject::restore(&client, id)
         .await
         .map_err(log_error(handler_name.to_string()))?;

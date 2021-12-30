@@ -42,7 +42,7 @@ pub async fn add_action(
             crate::error::AppErrorType::Common,
         ));
     }
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let mut ca = CreateAdmin { ..ca };
     ca.password = password::hash(&ca.password)?;
     admin::create(&client, ca)
@@ -57,7 +57,7 @@ pub async fn index(
     let handler_name = "backend_admin_index";
     let args = args.unwrap();
     let q_keyword = format!("%{}%", args.keyword());
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let admin_list = admin::select(
         &client,
         Some("is_del=$1 AND username ILIKE $2"),
@@ -78,7 +78,7 @@ pub async fn edit(
     Path(id): Path<i32>,
 ) -> Result<Html<String>> {
     let handler_name = "backend_admin_edit";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let item = admin::find_by_id(&client, id)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -103,7 +103,7 @@ pub async fn edit_action(
             crate::error::AppErrorType::Common,
         ));
     }
-    let admin_session = get_logined_admin(state.clone(), &headers).await?;
+    let admin_session = get_logined_admin(&state, &headers).await?;
     if admin_session.is_none() {
         return Err(AppError::auth_error("UNAUTHENTICATED"));
     }
@@ -113,7 +113,7 @@ pub async fn edit_action(
     };
     let mut ua = UpdateAdmin { ..ua };
     ua.new_password = password::hash(&ua.new_password)?;
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     admin::update(&client, ua).await?;
     redirect("/admin/admin?msg=修改成功")
 }
@@ -122,7 +122,7 @@ pub async fn del(
     Path(id): Path<i32>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_admin_del";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     admin::del_or_restore(&client, id, true)
         .await
         .map_err(log_error(handler_name.to_string()))?;
@@ -133,7 +133,7 @@ pub async fn restore(
     Path(id): Path<i32>,
 ) -> Result<(StatusCode, HeaderMap, ())> {
     let handler_name = "backend_admin_restore";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     admin::del_or_restore(&client, id, false)
         .await
         .map_err(log_error(handler_name.to_string()))?;

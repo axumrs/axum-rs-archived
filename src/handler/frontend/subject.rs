@@ -29,7 +29,7 @@ pub async fn index(
     let cache_client = state.clone().rdc.clone();
     let cached_content = cache::read(cache_client.clone(), &cache_key).await;
     tracing::debug!("page: {:?}", page);
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let mut list: Option<Pagination<Vec<Subject>>> = None;
     let mut flag = false;
     if let Some(cached_content) = cached_content {
@@ -75,7 +75,7 @@ pub async fn topics(
     };
     tracing::debug!("slug: {:?}, page: {:?}", slug, page);
     let handler_name = "frontend_subject_topics";
-    let client = get_client(state, handler_name).await?;
+    let client = get_client(&state, handler_name).await?;
     let subj = subject::find(&client, Some("slug=$1 AND is_del=false"), &[&slug])
         .await
         .map_err(log_error(handler_name.to_string()))?;
