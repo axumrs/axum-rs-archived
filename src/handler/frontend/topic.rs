@@ -84,8 +84,15 @@ pub async fn get_procted_content(
         .await
         .map_err(log_error(handler_name.to_string()))?;
     if let Some(s) = s {
-        let r: ProtectedContent = from_str(&s).unwrap();
+        rdb::del(&state.rdc, &redis_key)
+            .await
+            .map_err(log_error(handler_name.to_string()))?;
+        let r: ProtectedContent = from_str(&s)
+            .map_err(|err| AppError::protected_content(err.to_string().as_str()))
+            .map_err(log_error(handler_name.to_string()))?;
         return Ok(Json(r));
     }
-    Err(AppError::no_cached("没有找到需要的内容，请刷新页面重试"))
+    Err(AppError::protected_content(
+        "没有找到需要的内容，请刷新页面重试",
+    ))
 }
