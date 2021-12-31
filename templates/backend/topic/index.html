@@ -17,7 +17,10 @@
     <tr>
         <td> {{ row.subject_name }}</td>
         <td> {{ row.title }}</td>
-        <td>{{ row.subject_slug }}/{{ row.slug }}</td>
+        <td>
+            <a href="/topic/{{row.subject_slug}}/{{row.slug}}" target="_blank">{{ row.subject_slug }}/{{ row.slug }}</a>
+        </td>
+
         <td>
             {% if row.is_del %}
             <span class="badge badge-danger">已删除</span>

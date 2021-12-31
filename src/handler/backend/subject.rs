@@ -98,5 +98,5 @@ pub async fn restore(
     subject::restore(&client, id)
         .await
         .map_err(log_error(handler_name.to_string()))?;
-    redirect("/admin/subject?msg=专题删除成功")
+    redirect("/admin/subject?msg=专题还原成功")
 }
