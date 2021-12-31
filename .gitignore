@@ -6,3 +6,5 @@
 /target
 .env
 plugins.a
+/axum-rs
+/axum-rs.tar.gz
