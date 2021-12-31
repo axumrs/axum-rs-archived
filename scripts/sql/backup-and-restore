@@ -1,0 +1,5 @@
+# backup
+pg_dump -U axum_rs -W -F t axum_rs > /var/lib/postgresql/data/axum_rs.tar
+
+# restore
+pg_restore -U axum_rs --dbname=axum_rs  --verbose /var/lib/postgresql/data/axum_rs.tar

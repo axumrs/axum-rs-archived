@@ -1,0 +1,11 @@
+docker run \
+        --name axum_rs_postgres \
+        -e POSTGRES_PASSWORD=axum_rs \
+        -e POSTGRES_USER=axum_rs \
+        -e POSTGRES_DB=axum_rs \
+        -e TZ=PRC \
+        --restart=always \
+        -e PGDATA=/var/lib/postgresql/data/pgdata \
+        -v /var/docker/axum_rs_postgres:/var/lib/postgresql/data \
+        -p 127.0.0.1:15432:5432 \
+        -d postgres:alpine
