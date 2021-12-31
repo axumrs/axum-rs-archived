@@ -73,6 +73,12 @@
            for(let i = 0; i<5;i++){
                $(`#procted_content_${id}`).animate({borderWidth:"-=1px"}, 'slow');
            }
+                            $('.axumrs-content  img').each(function(){
+                                        $(this).addClass('img-fluid');
+                                    });
+                            $('.axumrs-content table').each(function(){
+                                        $(this).addClass('table').addClass('table-striped').addClass('my-3');
+                                    });
        } else {
                item.html('<div class="text-danger py-3">获取内容失败，请刷新页面重试。</div>');
         }

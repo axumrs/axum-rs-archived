@@ -95,7 +95,8 @@ async fn main() {
             "topic/get_procted_content",
             post(frontend::topic::get_procted_content),
         )
-        .route("about", get(frontend::about::index));
+        .route("about", get(frontend::about::index))
+        .route("video", get(frontend::index::video));
     let static_serve = get_service(ServeDir::new("static")).handle_error(|err| async move {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
