@@ -57,8 +57,6 @@ pub async fn topics(
         Some(arg) => arg.page,
         None => 0,
     };
-    let name = urlencoding::decode(&name).unwrap().into_owned();
-    tracing::debug!("name: {:?}, page: {:?}", name, page);
     let handler_name = "frontend_tag_topics";
     let client = get_client(&state, handler_name).await?;
     let tag = tag::find(&client, Some("name=$1 AND is_del=false"), &[&name])
