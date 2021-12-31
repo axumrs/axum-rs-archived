@@ -9,7 +9,7 @@
                 浏览：{{ topic.hit + 1 }} 时间：{{ topic.dateline() }} 作者：{{ topic.author }} 来源：{{ topic.src }}
             </div>
         </div>
-        <div class="card-body" style="min-height:30em">
+        <div class="card-body axumrs-detail" style="min-height:30em">
             {{ topic.html|safe }} 
         </div>
         <div class="card-footer">
@@ -38,13 +38,13 @@
 <script src="/static/highlight.js/highlight.min.js"></script>
 <script>
     $(function(){
-            const cls = [ 'info', 'success', 'warning', 'danger'];
-            const clsLen = cls.length;
-            $('.topic-tag').each(function(idx, ele) {
-                    const clsName = `badge-${cls[idx%clsLen]}`;
-                    $(ele).addClass(clsName);
-                });
+        const cls = [ 'info', 'success', 'warning', 'danger'];
+        const clsLen = cls.length;
+        $('.topic-tag').each(function(idx, ele) {
+            const clsName = `badge-${cls[idx%clsLen]}`;
+            $(ele).addClass(clsName);
         });
+    });
     hljs.highlightAll();
 </script>
 <script>

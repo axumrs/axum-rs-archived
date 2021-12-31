@@ -163,23 +163,26 @@
     <script src="/static/adminlte/dist/js/adminlte.min.js"></script>
     <script>
         $(function(){
-                    let url = location.pathname;
-                    $('.navbar-nav > .nav-item').each(function(){
-                                let item =  $(this).find('a');
-                                if(item.attr('href') === url) {
-                                            item.addClass('active');
-                                            return;
-                                        }
-                            });
-                });
-                $(function(){
-                            $('.axumrs-content  img').each(function(){
-                                        $(this).addClass('img-fluid');
-                                    });
-                            $('.axumrs-content table').each(function(){
-                                        $(this).addClass('table').addClass('table-striped').addClass('my-3');
-                                    });
-                        });
+            let url = location.pathname;
+            $('.navbar-nav > .nav-item').each(function(){
+                let item =  $(this).find('a');
+                if(item.attr('href') === url) {
+                    item.addClass('active');
+                    return;
+                }
+            });
+        });
+        $(function(){
+            $('.axumrs-content  img').each(function(){
+                $(this).addClass('img-fluid');
+            });
+            $('.axumrs-content table').each(function(){
+                $(this).addClass('table').addClass('table-striped').addClass('my-3');
+            });
+            $('.axumrs-detail a').each(function(){
+                $(this).attr('target', '_blank');
+            });
+        });
     </script>
     {%block js%}{%endblock %}
   </body>
