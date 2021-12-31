@@ -4,7 +4,7 @@ use std::sync::Arc;
 use axum::{
     extract::extractor_middleware,
     http::StatusCode,
-    routing::{get, get_service, post},
+    routing::{get, get_service},
     AddExtensionLayer, Router,
 };
 use axum_rs::{
@@ -36,67 +36,8 @@ async fn main() {
         hcap_cfg: cfg.hcaptcha,
     });
 
-    let backend_router = Router::new()
-        .route("/", get(backend::index::index))
-        .route("/subject", get(backend::subject::index))
-        .route(
-            "/subject/add",
-            get(backend::subject::add).post(backend::subject::add_action),
-        )
-        .route(
-            "/subject/edit/:id",
-            get(backend::subject::edit).post(backend::subject::edit_action),
-        )
-        .route("/subject/del/:id", get(backend::subject::del))
-        .route("/subject/restore/:id", get(backend::subject::restore))
-        .route("/tag", get(backend::tag::index))
-        .route(
-            "/tag/add",
-            get(backend::tag::add).post(backend::tag::add_action),
-        )
-        .route(
-            "/tag/edit/:id",
-            get(backend::tag::edit).post(backend::tag::edit_action),
-        )
-        .route("/tag/del/:id", get(backend::tag::del))
-        .route("/tag/restore/:id", get(backend::tag::restore))
-        .route("/topic", get(backend::topic::index))
-        .route(
-            "/topic/add",
-            get(backend::topic::add).post(backend::topic::add_action),
-        )
-        .route("/topic/del/:id", get(backend::topic::del))
-        .route("/topic/restore/:id", get(backend::topic::restore))
-        .route(
-            "/topic/edit/:id",
-            get(backend::topic::edit).post(backend::topic::edit_action),
-        )
-        .route("/admin", get(backend::admin::index))
-        .route(
-            "/admin/add",
-            get(backend::admin::add).post(backend::admin::add_action),
-        )
-        .route(
-            "/admin/edit/:id",
-            get(backend::admin::edit).post(backend::admin::edit_action),
-        )
-        .route("/admin/del/:id", get(backend::admin::del))
-        .route("/admin/restore/:id", get(backend::admin::restore))
-        .layer(extractor_middleware::<Auth>());
-    let frontend_router = Router::new()
-        .route("/", get(frontend::index::index))
-        .route("subject", get(frontend::subject::index))
-        .route("subject/:slug", get(frontend::subject::topics))
-        .route("tag", get(frontend::tag::index))
-        .route("tag/:name", get(frontend::tag::topics))
-        .route("topic", get(frontend::topic::index))
-        .route("topic/:subject_slug/:slug", get(frontend::topic::detail))
-        .route(
-            "topic/get_procted_content",
-            post(frontend::topic::get_procted_content),
-        )
-        .route("about", get(frontend::about::index))
-        .route("video", get(frontend::index::video));
+    let backend_router = backend::routers().layer(extractor_middleware::<Auth>());
+    let frontend_router = frontend::routers();
     let static_serve = get_service(ServeDir::new("static")).handle_error(|err| async move {
         (
             StatusCode::INTERNAL_SERVER_ERROR,

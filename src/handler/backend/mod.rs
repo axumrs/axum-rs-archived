@@ -1,4 +1,4 @@
-use axum::http::HeaderMap;
+use axum::{http::HeaderMap, routing::get, Router};
 
 use crate::{
     error::AppError,
@@ -41,4 +41,32 @@ pub async fn get_logined_admin(
         }
     }
     Ok(None)
+}
+
+pub fn routers() -> Router {
+    Router::new()
+        .route("/", get(index::index))
+        .route("/subject", get(subject::index))
+        .route("/subject/add", get(subject::add).post(subject::add_action))
+        .route(
+            "/subject/edit/:id",
+            get(subject::edit).post(subject::edit_action),
+        )
+        .route("/subject/del/:id", get(subject::del))
+        .route("/subject/restore/:id", get(subject::restore))
+        .route("/tag", get(tag::index))
+        .route("/tag/add", get(tag::add).post(tag::add_action))
+        .route("/tag/edit/:id", get(tag::edit).post(tag::edit_action))
+        .route("/tag/del/:id", get(tag::del))
+        .route("/tag/restore/:id", get(tag::restore))
+        .route("/topic", get(topic::index))
+        .route("/topic/add", get(topic::add).post(topic::add_action))
+        .route("/topic/del/:id", get(topic::del))
+        .route("/topic/restore/:id", get(topic::restore))
+        .route("/topic/edit/:id", get(topic::edit).post(topic::edit_action))
+        .route("/admin", get(admin::index))
+        .route("/admin/add", get(admin::add).post(admin::add_action))
+        .route("/admin/edit/:id", get(admin::edit).post(admin::edit_action))
+        .route("/admin/del/:id", get(admin::del))
+        .route("/admin/restore/:id", get(admin::restore))
 }
