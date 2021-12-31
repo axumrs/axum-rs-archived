@@ -49,7 +49,6 @@ pub async fn detail(
     Path(arg): Path<TopicArgs>,
 ) -> Result<Html<String>> {
     let TopicArgs { subject_slug, slug } = arg;
-    tracing::debug!("subject_slug: {:?}, slug: {:?}", subject_slug, slug);
     let handler_name = "frontend_topics_detail";
     let mut client = get_client(&state.clone(), handler_name).await?;
     let mut result = topic::detail(&mut client, &subject_slug, &slug)

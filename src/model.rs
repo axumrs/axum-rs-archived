@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{Local, TimeZone};
 use redis::Client;
 use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
@@ -154,7 +154,7 @@ pub struct TopicDetail {
 }
 impl TopicDetail {
     pub fn dateline(&self) -> String {
-        let dt = NaiveDateTime::from_timestamp(self.dateline as i64, 0);
+        let dt = Local.timestamp(self.dateline as i64, 0);
         dt.format("%Y/%m/%d %H:%M:%S").to_string()
     }
 }
