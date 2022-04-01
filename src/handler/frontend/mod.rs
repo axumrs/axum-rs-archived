@@ -18,16 +18,16 @@ pub struct PaginationArgs {
 pub fn routers() -> Router {
     Router::new()
         .route("/", get(index::index))
-        .route("subject", get(subject::index))
-        .route("subject/:slug", get(subject::topics))
-        .route("tag", get(tag::index))
-        .route("tag/:name", get(tag::topics))
-        .route("topic", get(topic::index))
-        .route("topic/:subject_slug/:slug", get(topic::detail))
+        .route("/subject", get(subject::index))
+        .route("/subject/:slug", get(subject::topics))
+        .route("/tag", get(tag::index))
+        .route("/tag/:name", get(tag::topics))
+        .route("/topic", get(topic::index))
+        .route("/topic/:subject_slug/:slug", get(topic::detail))
         .route(
-            "topic/get_procted_content",
+            "/topic/get_procted_content",
             post(topic::get_procted_content),
         )
-        .route("about", get(about::index))
-        .route("video", get(index::video))
+        .route("/about", get(about::index))
+        .route("/video", get(index::video))
 }

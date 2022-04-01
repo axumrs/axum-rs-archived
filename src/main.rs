@@ -3,9 +3,10 @@ use std::sync::Arc;
 
 use axum::{
     extract::extractor_middleware,
+    extract::Extension,
     http::StatusCode,
     routing::{get, get_service},
-    AddExtensionLayer, Router,
+    Router,
 };
 use axum_rs::{
     config,
@@ -51,7 +52,7 @@ async fn main() {
         .nest("/admin", backend_router)
         .route("/login", get(auth::admin_login_ui).post(auth::admin_login))
         .route("/logout", get(auth::admin_logout))
-        .layer(AddExtensionLayer::new(state));
+        .layer(Extension(state));
     axum::Server::bind(&cfg.web.addr.parse().unwrap())
         .serve(app.into_make_service())
         .await
