@@ -15,7 +15,7 @@ tokio = { version="1", features = ["full"] }
 serde = { version="1", features = ["derive"] }
 serde_json = "1"
 axum = "0.5"
-config = "0.11"
+config = "0.12"
 dotenv = "0.15"
 tokio-postgres = "0.7"
 tokio-pg-mapper = "0.2"

@@ -24,6 +24,8 @@ pub enum AppErrorType {
     HttpError,
     JsonError,
     ProtectedContentError,
+    /// 配置
+    Config,
     /// 通用错误
     Common,
 }
@@ -130,6 +132,11 @@ impl From<bcrypt::BcryptError> for AppError {
 impl From<serde_json::Error> for AppError {
     fn from(err: serde_json::Error) -> Self {
         Self::from_err(err, AppErrorType::JsonError)
+    }
+}
+impl From<config::ConfigError> for AppError {
+    fn from(err: config::ConfigError) -> Self {
+        Self::from_err(err, AppErrorType::Config)
     }
 }
 

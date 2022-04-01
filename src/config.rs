@@ -2,6 +2,8 @@
 
 use serde::Deserialize;
 
+use crate::{error::AppError, Result};
+
 /// Web配置
 #[derive(Deserialize)]
 pub struct WebConfig {
@@ -24,7 +26,7 @@ pub struct SessionConfig {
 #[derive(Deserialize, Clone)]
 pub struct HCaptchaConfig {
     pub site_key: String,
-    pub secret_key:String,
+    pub secret_key: String,
 }
 
 /// 配置
@@ -41,9 +43,12 @@ pub struct Config {
 
 impl Config {
     /// 从环境变量中初始化配置
-    pub fn from_env() -> Result<Self, config::ConfigError> {
-        let mut cfg = config::Config::new();
-        cfg.merge(config::Environment::new())?;
-        cfg.try_into()
+    pub fn from_env() -> Result<Self> {
+        config::Config::builder()
+            .add_source(config::Environment::default())
+            .build()
+            .map_err(AppError::from)?
+            .try_deserialize()
+            .map_err(AppError::from)
     }
 }
