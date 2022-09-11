@@ -1,6 +1,6 @@
 [package]
 name = "axum-rs"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 authors = ["axum.rs <team@axum.rs>"]
 license = "MIT"

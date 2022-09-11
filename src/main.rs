@@ -35,6 +35,7 @@ async fn main() {
         rdc,
         sess_cfg: cfg.session,
         hcap_cfg: cfg.hcaptcha,
+        recap_cfg: cfg.recaptcha,
     });
 
     let backend_router = backend::routers().layer(extractor_middleware::<Auth>());

@@ -14,6 +14,7 @@ pub mod password;
 pub mod rdb;
 pub mod session;
 pub mod time;
+pub mod recaptcha;
 
 /// 结果
 type Result<T> = std::result::Result<T, self::error::AppError>;

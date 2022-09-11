@@ -3,13 +3,14 @@ use redis::Client;
 use serde::{Deserialize, Serialize};
 use tokio_pg_mapper_derive::PostgresMapper;
 
-use crate::config::{HCaptchaConfig, SessionConfig};
+use crate::config::{HCaptchaConfig, ReCaptchaConfig, SessionConfig};
 
 pub struct AppState {
     pub pool: deadpool_postgres::Pool,
     pub rdc: Client,
     pub sess_cfg: SessionConfig,
     pub hcap_cfg: HCaptchaConfig,
+    pub recap_cfg: ReCaptchaConfig,
 }
 
 #[derive(PostgresMapper, Deserialize, Serialize)]

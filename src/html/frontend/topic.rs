@@ -16,4 +16,5 @@ pub struct IndexTemplate {
 pub struct DetailTemplate {
     pub topic: TopicDetail,
     pub uuids: Vec<String>,
+    pub hc: bool,
 }

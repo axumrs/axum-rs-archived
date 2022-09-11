@@ -51,6 +51,7 @@ pub async fn protected_content(
     html: &str,
     client: &redis::Client,
     site_key: &str,
+    hc:bool,
 ) -> (String, Vec<String>) {
     let mut hcs = vec![];
     let re = Regex::new(r"(?sm)<(p|pre)>(.+?)</(p|pre)>").unwrap();
@@ -101,10 +102,16 @@ pub async fn protected_content(
                     rdb::set(&client, &key, json!(c).to_string().as_str(), 60 * 20)
                         .await
                         .unwrap();
-                    format!(
-                        "<div id=\"hcaptcha-{uuid}\" class=\"callout callout-info\"><div>你需要进行人机验证才能查看隐藏的内容(大约{count}字节)</div><div class=\"h-captcha\" data-sitekey=\"{site_key}\"  data-callback=\"get_procted_content_{uuid}\"></div></div>",
-                        site_key=site_key, uuid=c.uuid,count=word_count(&c.content)
-                    )
+                    if hc {
+                        format!(
+                            "<div id=\"hcaptcha-{uuid}\" class=\"callout callout-info\"><div>你需要进行人机验证才能查看隐藏的内容(大约{count}字节)</div><div class=\"h-captcha\" data-sitekey=\"{site_key}\"  data-callback=\"get_procted_content_{uuid}\"></div></div>",
+                            site_key=site_key, uuid=c.uuid,count=word_count(&c.content)
+                        )
+                    } else {
+                        format!(r#"<div class="g-recaptcha" data-sitekey="{site_key}" data-callback="get_procted_content_recaptcha" data-size="invisible" id="hcaptcha-{uuid}"></div><div id="captcha-notice-{uuid}" class="captcha-notice callout callout-info">
+                        </div>"#,site_key=site_key, uuid=c.uuid)
+                    }
+                    
                 };
                 out.push_str(&line);
                 out.push('\n');

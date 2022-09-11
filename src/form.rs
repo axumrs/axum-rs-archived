@@ -56,7 +56,8 @@ pub struct AdminLogin {
 #[derive(Deserialize)]
 pub struct GetProctedContent {
     pub id: String,
-    pub hcaptcha_response: String,
+    pub response: String,
+    pub hc:bool,
 }
 
 #[derive(Deserialize)]

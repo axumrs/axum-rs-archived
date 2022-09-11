@@ -30,9 +30,52 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="cannot-connect-google-modal" tabindex="-1" aria-labelledby="cannot-connect-google-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="cannot-connect-google-modal-label">无法访问Google?</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div>你好像不能正常访问 Google reCaptcha，是否切换到 hCaptcha？</div>
+              <table>
+                <thead>
+                    <tr>
+                        <th>Google reCaptcha</th>
+                        <th>hCaptcha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>大概率自动完成人机验证</td>
+                        <td>需要手动完成人机验证</td>
+                    </tr>
+                    <tr>
+                        <td>小概率触发手动完成人机验证时，只要完成一次即可显示所有隐藏内容</td>
+                        <td>需要手动完成最多3次人机验证，每次显示一段隐藏内容</td>
+                    </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+              <button type="button" class="btn btn-primary" onclick="window.location.href = window.location.href+'?hc=1'">切换到 hCaptcha</button>
+            </div>
+          </div>
+        </div>
+      </div>
 {%endblock%}
 {% block css%}
     <link rel="stylesheet" href="/static/highlight.js/default.min.css" />
+    <style>
+        .captcha-notice::before {
+            content: '正在进行人机验证，请确保你能正常访问Google';
+        }
+    </style>
 {%endblock%}
 {%block js%}
 <script src="/static/highlight.js/highlight.min.js"></script>
@@ -48,6 +91,7 @@
     hljs.highlightAll();
 </script>
 <script>
+    {%if hc%}
     {% for uuid in uuids %}
     function get_procted_content_{{uuid}}(response) {
         let item =  $('#hcaptcha-{{uuid}}');
@@ -56,22 +100,37 @@
             <span class="sr-only">请稍等……</span>
             </div>
             </div>`);
-        get_procted_content('{{uuid}}', response);
+        get_procted_content('{{uuid}}', response,{{hc}});
     }
     {%endfor%}
-    function get_procted_content(id, response) {
-        $.post('/topic/get_procted_content', {id: id, hcaptcha_response: response}, function(data) {
-            let item =  $('#hcaptcha-' + id);
+    {%else%}
+    function get_procted_content_recaptcha(token) {
+        const ids = '{{uuids|join(",")}}';
+        get_procted_content(ids,token, false);
+    }
+    window.onload = () => {
+        try{
+        grecaptcha.execute();
+        }catch(e) {
+            console.log(e);
+            $('#cannot-connect-google-modal').modal('show');
+        }
+    }
+    {%endif%}
+    function get_procted_content(id, response,hc) {
+        $.post('/topic/get_procted_content', {id, response, hc}, function(datas) {
+            for(const data of datas ){
+                let item =  $('#hcaptcha-' + data.uuid);
             if(data && data.tag && data.content) {
-                let html = `<${data.tag} id="procted_content_${id}" style="border:5px solid #17a2b8">${data.content}</${data.tag}>`;
+                let html = `<${data.tag} id="procted_content_${data.uuid}" style="border:5px solid #17a2b8">${data.content}</${data.tag}>`;
                 item.after(html);
                 item.remove();
                 if (data.tag === 'pre'){
-                    hljs.highlightElement($(`#procted_content_${id}`)[0]);
+                    hljs.highlightElement($(`#procted_content_${data.uuid}`)[0]);
 
                 }
            for(let i = 0; i<5;i++){
-               $(`#procted_content_${id}`).animate({borderWidth:"-=1px"}, 'slow');
+               $(`#procted_content_${data.uuid}`).animate({borderWidth:"-=1px"}, 'slow');
            }
                             $('.axumrs-content  img').each(function(){
                                         $(this).addClass('img-fluid');
@@ -79,11 +138,18 @@
                             $('.axumrs-content table').each(function(){
                                         $(this).addClass('table').addClass('table-striped').addClass('my-3');
                                     });
+            $(`#captcha-notice-${data.uuid}`).hide();
        } else {
                item.html('<div class="text-danger py-3">获取内容失败，请刷新页面重试。</div>');
         }
+            }
+            
     });
 }
 </script>
+{%if hc%}
 <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+{%else%}
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{%endif%}
 {%endblock%}

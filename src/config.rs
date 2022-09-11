@@ -28,6 +28,11 @@ pub struct HCaptchaConfig {
     pub site_key: String,
     pub secret_key: String,
 }
+#[derive(Deserialize, Clone)]
+pub struct ReCaptchaConfig {
+    pub site_key: String,
+    pub secret_key: String,
+}
 
 /// 配置
 #[derive(Deserialize)]
@@ -39,6 +44,7 @@ pub struct Config {
     pub redis: RedisConfig,
     pub session: SessionConfig,
     pub hcaptcha: HCaptchaConfig,
+    pub recaptcha: ReCaptchaConfig,
 }
 
 impl Config {
