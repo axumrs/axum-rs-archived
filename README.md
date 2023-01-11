@@ -1,5 +1,11 @@
 # axum.rs 网站系统
 
+## 本仓库已存档，新版代码请移步[axumrs/axum-rs](https://github.com/axumrs/axum-rs)
+
+## 本仓库已存档，新版代码请移步[axumrs/axum-rs](https://github.com/axumrs/axum-rs)
+
+## 本仓库已存档，新版代码请移步[axumrs/axum-rs](https://github.com/axumrs/axum-rs)
+
 [AXUM中文网(axum.rs)](https://axum.rs)为你提供了使用axum进行企业级Web开发中所需要的大部分知识。从基础知识到企业级项目的开发，都有完整的系列教程。更难得的是，除了文字教程，我们还录制了配套的视频教程，方便你以多种形式进行学习。       
 
 ## 技术栈
